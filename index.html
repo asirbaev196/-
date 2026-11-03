@@ -14,7 +14,6 @@
 
     #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
 
-    /* ЗАГРУЗКА */
     #loading-screen {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -24,7 +23,6 @@
     .progress-bar { width: 200px; height: 4px; background: #003333; border-radius: 2px; overflow: hidden; }
     .progress-fill { width: 0%; height: 100%; background: #00ffcc; transition: width 0.3s; }
 
-    /* РЕГИСТРАЦИЯ */
     #auth-screen {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0, 5, 15, 0.4); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
@@ -46,7 +44,6 @@
       font-size: 16px; font-weight: bold; cursor: pointer; pointer-events: auto;
     }
 
-    /* КАТСЦЕНА */
     #cockpit-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 50; display: none; }
     .window-frame {
       position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -62,7 +59,6 @@
       opacity: 0; transition: opacity 0.5s ease; z-index: 60; text-shadow: 0 2px 10px rgba(0,0,0,0.9);
     }
 
-    /* ПЕРЕХОД ГЛАВ */
     #chapter-transition {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       background: #000; opacity: 0; pointer-events: none; z-index: 150;
@@ -72,14 +68,12 @@
     #chapter-title { color: white; font-size: 24px; margin-bottom: 10px; opacity: 0; transition: opacity 1s; }
     #chapter-subtitle { color: #00ffcc; font-size: 32px; font-weight: bold; text-shadow: 0 0 20px #00ffcc; opacity: 0; transition: opacity 1s; }
 
-    /* ИГРОВОЙ ИНТЕРФЕЙС */
     #game-ui { display: none; opacity: 0; transition: opacity 1s; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none;}
     #quest-hud {
       position: absolute; top: 20px; left: 20px; color: #00ffcc; font-size: 16px; font-weight: bold; 
       background: rgba(0,0,0,0.6); padding: 10px 15px; border-radius: 8px; border-left: 3px solid #00ffcc; backdrop-filter: blur(5px);
     }
 
-    /* Управление */
     #joystick-zone { position: absolute; bottom: 0; left: 0; width: 50%; height: 60%; pointer-events: auto; }
     #camera-zone { position: absolute; top: 0; right: 0; width: 50%; height: 100%; pointer-events: auto; }
     #joystick-base {
@@ -93,7 +87,6 @@
       top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none;
     }
 
-    /* Кнопки */
     #top-buttons { position: absolute; top: 20px; right: 20px; pointer-events: auto; }
     #bottom-buttons { position: absolute; bottom: 30px; right: 20px; display: flex; flex-direction: column; gap: 15px; pointer-events: auto; }
     .act-btn {
@@ -105,7 +98,6 @@
     .act-btn:active { background: rgba(0, 255, 204, 0.4); transform: scale(0.9); }
     #btn-jump { width: 80px; height: 80px; font-size: 32px; }
     #btn-interact { border-color: #ffcc00; color: #ffcc00; box-shadow: 0 0 20px rgba(255, 204, 0, 0.6); display: none; animation: pulse 1s infinite alternate; }
-    
     @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.1); } }
   </style>
 </head>
@@ -164,7 +156,7 @@
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
     // ==========================================
-    // СИНТЕЗАТОР ЗВУКОВ (Web Audio API)
+    // ЗВУКИ И ВИБРАЦИЯ
     // ==========================================
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx;
@@ -201,37 +193,47 @@
     }
 
     // ==========================================
-    // ТЕКСТУРЫ ПЛАНЕТ
+    // ГЕНЕРАЦИЯ ТЕКСТУР (ПРОЦЕДУРНЫЕ)
     // ==========================================
-    function createPlanetTexture(type) {
+    function createTexture(type) {
       const canvas = document.createElement('canvas');
-      canvas.width = 512; canvas.height = 256;
+      canvas.width = 512; canvas.height = 512;
       const ctx = canvas.getContext('2d');
+      
       if (type === 'moon') {
-        ctx.fillStyle = '#999999'; ctx.fillRect(0, 0, 512, 256);
-        for(let i = 0; i < 150; i++) {
-          const x = Math.random() * 512; const y = Math.random() * 256; const r = Math.random() * 8 + 2;
+        ctx.fillStyle = '#777777'; ctx.fillRect(0, 0, 512, 512);
+        for(let i = 0; i < 500; i++) {
+          const x = Math.random() * 512; const y = Math.random() * 512; const r = Math.random() * 5 + 1;
           ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(40, 40, 40, ${Math.random() * 0.5 + 0.3})`; ctx.fill();
+          ctx.fillStyle = `rgba(${Math.random()*100}, ${Math.random()*100}, ${Math.random()*100}, 0.5)`; ctx.fill();
         }
-      } else if (type === 'earth') {
-        ctx.fillStyle = '#1133aa'; ctx.fillRect(0, 0, 512, 256);
-        for(let i = 0; i < 30; i++) {
-          ctx.beginPath(); ctx.arc(Math.random() * 512, Math.random() * 256, Math.random() * 40 + 10, 0, Math.PI * 2);
-          ctx.fillStyle = '#22aa44'; ctx.fill();
+      } else if (type === 'mars') {
+        ctx.fillStyle = '#aa4422'; ctx.fillRect(0, 0, 512, 512);
+        for(let i = 0; i < 800; i++) {
+          const x = Math.random() * 512; const y = Math.random() * 512; const r = Math.random() * 8 + 1;
+          ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${Math.random()*150}, ${Math.random()*80}, ${Math.random()*50}, 0.6)`; ctx.fill();
         }
-        for(let i = 0; i < 50; i++) {
-          ctx.beginPath(); ctx.arc(Math.random() * 512, Math.random() * 256, Math.random() * 20, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'; ctx.fill();
+      } else if (type === 'metal') {
+        ctx.fillStyle = '#444444'; ctx.fillRect(0, 0, 512, 512);
+        for(let i = 0; i < 200; i++) {
+          ctx.beginPath();
+          ctx.moveTo(Math.random() * 512, Math.random() * 512);
+          ctx.lineTo(Math.random() * 512, Math.random() * 512);
+          ctx.strokeStyle = `rgba(150,150,150, ${Math.random() * 0.3})`;
+          ctx.lineWidth = Math.random() * 2;
+          ctx.stroke();
         }
       }
+      
       const tex = new THREE.CanvasTexture(canvas);
       tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(10, 10); // Повторяем текстуру, чтобы не была размытой
       return tex;
     }
 
     // ==========================================
-    // 3D СЦЕНА
+    // СЦЕНА
     // ==========================================
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
@@ -242,11 +244,18 @@
     renderer.setSize(innerWidth, innerHeight);
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Мягкие тени
     document.body.appendChild(renderer.domElement);
 
-    scene.add(new THREE.AmbientLight(0x333344, 1.5));
-    const sunLight = new THREE.DirectionalLight(0xffffff, 2);
-    sunLight.position.set(50, 20, 50);
+    // Свет
+    scene.add(new THREE.AmbientLight(0x444455, 1.2));
+    const sunLight = new THREE.DirectionalLight(0xffffff, 2.5);
+    sunLight.position.set(30, 50, 30);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.width = 1024;
+    sunLight.shadow.mapSize.height = 1024;
+    sunLight.shadow.camera.left = -50; sunLight.shadow.camera.right = 50;
+    sunLight.shadow.camera.top = 50; sunLight.shadow.camera.bottom = -50;
     scene.add(sunLight);
 
     // Космос
@@ -257,64 +266,87 @@
     const stars = new THREE.Points(starsGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 1.5 }));
     scene.add(stars);
 
-    const earth = new THREE.Mesh(new THREE.SphereGeometry(80, 64, 64), new THREE.MeshStandardMaterial({ map: createPlanetTexture('earth'), emissive: 0x001133 }));
+    const earth = new THREE.Mesh(new THREE.SphereGeometry(80, 64, 64), new THREE.MeshStandardMaterial({ color: 0x2244aa, emissive: 0x001133 }));
     earth.position.set(-300, -50, -400); scene.add(earth);
 
-    const moonSpace = new THREE.Mesh(new THREE.SphereGeometry(40, 64, 64), new THREE.MeshStandardMaterial({ map: createPlanetTexture('moon') }));
+    const moonSpace = new THREE.Mesh(new THREE.SphereGeometry(40, 64, 64), new THREE.MeshStandardMaterial({ color: 0xaaaaaa }));
     moonSpace.position.set(0, 0, -150); scene.add(moonSpace);
 
     // ==========================================
-    // ЛАНДШАФТ (ЛУНА/МАРС)
+    // ЛАНДШАФТ С КРАТЕРАМИ
     // ==========================================
-    let currentPlanetGroup = new THREE.Group();
-    scene.add(currentPlanetGroup);
-    currentPlanetGroup.visible = false;
+    let planetGroup = new THREE.Group();
+    scene.add(planetGroup);
+    planetGroup.visible = false;
 
-    function generateTerrain(color) {
-      const geo = new THREE.PlaneGeometry(300, 300, 100, 100);
+    function generateTerrain(color, textureType) {
+      // 1. Создаем плоскость с огромным количеством полигонов
+      const geo = new THREE.PlaneGeometry(300, 300, 150, 150);
       const pos = geo.attributes.position;
+      
+      // 2. Искажаем вершины (делаем холмы и ямы)
       for (let i = 0; i < pos.count; i++) {
-          const x = pos.getX(i); const y = pos.getY(i);
-          const z = Math.sin(x * 0.1) * Math.cos(y * 0.1) * 3 + Math.sin(x * 0.5) * Math.cos(y * 0.5) * 1.5;
+          const x = pos.getX(i); 
+          const y = pos.getY(i);
+          
+          // Математический шум для волнистости
+          let z = Math.sin(x * 0.1) * Math.cos(y * 0.1) * 3;
+          z += Math.sin(x * 0.4) * Math.cos(y * 0.4) * 1.5;
+          
+          // Добавляем случайные кратеры (выдавленные ямы)
+          const distToCenter = Math.hypot(x, y);
+          if (Math.sin(x * 0.05) * Math.cos(y * 0.05) > 0.6) {
+              z -= 2; // Резкий спуск вниз (кратер)
+          }
+
           pos.setZ(i, z);
       }
       geo.computeVertexNormals();
-      const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: color, roughness: 1, flatShading: true }));
+
+      // 3. Накладываем текстуру
+      const mat = new THREE.MeshStandardMaterial({ 
+        map: createTexture(textureType), 
+        roughness: 0.9, 
+        metalness: 0.1,
+        flatShading: false
+      });
+
+      const mesh = new THREE.Mesh(geo, mat);
       mesh.rotation.x = -Math.PI / 2;
       mesh.receiveShadow = true;
+      mesh.castShadow = true;
       return mesh;
     }
 
-    let ground = generateTerrain(0x555555); // Луна
-    currentPlanetGroup.add(ground);
+    let ground = generateTerrain(0x555555, 'moon');
+    planetGroup.add(ground);
 
     // ==========================================
-    // ИГРОВЫЕ ОБЪЕКТЫ
+    // ПРЕДМЕТЫ И ПЕРСОНАЖ
     // ==========================================
-    const itemsList = []; // Обломки, Ядра, Кристаллы
-
+    const itemsList = [];
     function spawnItem(type, x, z) {
       let mesh;
+      const metalTex = createTexture('metal');
+      
       if (type === 'debris') {
-        mesh = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.8, 2), new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.9 }));
+        mesh = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.8, 2), new THREE.MeshStandardMaterial({ map: metalTex, metalness: 0.9, roughness: 0.2 }));
         mesh.position.set(x, 1.5, z);
       } else if (type === 'core') {
-        mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(0.6, 1), new THREE.MeshStandardMaterial({ color: 0x00ffcc, emissive: 0x00ffcc }));
+        mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(0.6, 1), new THREE.MeshStandardMaterial({ color: 0x00ffcc, emissive: 0x00ffcc, emissiveIntensity: 1.5 }));
         mesh.position.set(x, 2, z);
       } else if (type === 'crystal') {
-        mesh = new THREE.Mesh(new THREE.ConeGeometry(0.6, 2, 5), new THREE.MeshStandardMaterial({ color: 0xff3333, emissive: 0x550000 }));
+        mesh = new THREE.Mesh(new THREE.ConeGeometry(0.6, 2, 5), new THREE.MeshStandardMaterial({ color: 0xff3333, emissive: 0x550000, metalness: 0.8 }));
         mesh.position.set(x, 1, z);
       }
+      
       mesh.castShadow = true;
-      currentPlanetGroup.add(mesh);
+      planetGroup.add(mesh);
       itemsList.push({ mesh, type, collected: false });
     }
 
-    // ==========================================
-    // ПЕРСОНАЖ И УПРАВЛЕНИЕ
-    // ==========================================
     const character = new THREE.Group();
-    currentPlanetGroup.add(character);
+    planetGroup.add(character);
     let mixer, walkAction, isModelLoaded = false;
 
     const loader = new GLTFLoader();
@@ -324,8 +356,9 @@
       model.traverse((child) => {
         if (child.isMesh) {
           child.castShadow = true;
-          child.material = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3, metalness: 0.7, skinning: true });
-          if (child.name.includes('Head')) child.material.color.setHex(0x111111);
+          child.receiveShadow = true;
+          child.material = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4, metalness: 0.5, skinning: true });
+          if (child.name.includes('Head')) { child.material.color.setHex(0x111111); child.material.metalness = 1; }
         }
       });
       character.add(model);
@@ -335,7 +368,9 @@
       isModelLoaded = true;
     });
 
-    // Камера
+    // ==========================================
+    // УПРАВЛЕНИЕ
+    // ==========================================
     let camTheta = 0, camPhi = Math.PI / 3.5, camMode = 0;
     const camZone = document.getElementById('camera-zone');
     let isDraggingCam = false, prevX = 0, prevY = 0;
@@ -356,10 +391,9 @@
       if(isModelLoaded) character.children[0].visible = (camMode !== 2);
     });
 
-    // Джойстик
     let moveVector = new THREE.Vector2(0, 0);
     let isJumping = false, jumpVelocity = 0;
-    let GRAVITY = -8; // Лунная гравитация
+    let GRAVITY = -8;
 
     const jZone = document.getElementById('joystick-zone');
     const jBase = document.getElementById('joystick-base');
@@ -382,7 +416,7 @@
     });
     const endTouch = (e) => {
       if (e.pointerId !== touchId) return;
-      touchId = null; jBase.style.display = 'none'; moveVector.set(0, 0); // Мгновенная остановка
+      touchId = null; jBase.style.display = 'none'; moveVector.set(0, 0);
     };
     jZone.addEventListener('pointerup', endTouch); jZone.addEventListener('pointercancel', endTouch);
 
@@ -392,7 +426,7 @@
     });
 
     // ==========================================
-    // СЦЕНАРИЙ И ГЛАВЫ
+    // СЦЕНАРИЙ
     // ==========================================
     let gameState = 'LOADING';
     let currentChapter = 1;
@@ -422,7 +456,6 @@
       if(dur) setTimeout(() => ui.text.style.opacity = 0, dur);
     }
 
-    // 1. Загрузка
     let prog = 0;
     const loadInt = setInterval(() => {
       prog += Math.random() * 20;
@@ -433,7 +466,6 @@
       ui.progress.style.width = prog + '%';
     }, 200);
 
-    // 2. Старт
     ui.startBtn.addEventListener('click', () => {
       initAudio(); playSound('ui');
       const name = document.getElementById('username').value.trim() || "Пилот";
@@ -451,7 +483,7 @@
             ui.heartbeat.style.opacity = 1;
             setTimeout(() => {
               ui.heartbeat.style.opacity = 0; gameState = 'GAME';
-              moonSpace.visible = false; currentPlanetGroup.visible = true; stars.visible = false;
+              moonSpace.visible = false; planetGroup.visible = true; stars.visible = false;
               ui.gameUI.style.display = 'block'; setTimeout(() => ui.gameUI.style.opacity = '1', 100);
               startChapter(1);
             }, 3000);
@@ -460,15 +492,11 @@
       }, 3000);
     });
 
-    // ==========================================
-    // ЛОГИКА ГЛАВ
-    // ==========================================
     function startChapter(chapterNum) {
       currentChapter = chapterNum;
       questCount = 0;
       
-      // Очищаем старые предметы
-      itemsList.forEach(i => currentPlanetGroup.remove(i.mesh));
+      itemsList.forEach(i => planetGroup.remove(i.mesh));
       itemsList.length = 0;
 
       if (chapterNum === 1) {
@@ -480,11 +508,10 @@
         for(let i=0; i<3; i++) spawnItem('core', (Math.random()-0.5)*50, (Math.random()-0.5)*50);
       }
       else if (chapterNum === 3) {
-        // Меняем ландшафт на Марс
-        currentPlanetGroup.remove(ground);
-        ground = generateTerrain(0xaa4422); // Красный цвет
-        currentPlanetGroup.add(ground);
-        GRAVITY = -15; // Гравитация Марса выше
+        planetGroup.remove(ground);
+        ground = generateTerrain(0xaa4422, 'mars');
+        planetGroup.add(ground);
+        GRAVITY = -15;
 
         ui.hud.innerText = "Задание: Найти кристаллы (0/3)";
         for(let i=0; i<3; i++) spawnItem('crystal', (Math.random()-0.5)*50, (Math.random()-0.5)*50);
@@ -501,7 +528,6 @@
       if (currentChapter === 3) nextName = "Конец Демо";
       
       ui.subtitle.innerText = nextName;
-      
       ui.trans.style.opacity = 1; ui.title.style.opacity = 1; ui.subtitle.style.opacity = 1;
       playSound('ui');
 
@@ -519,7 +545,6 @@
       }, 3500);
     }
 
-    // Проверка взаимодействия (Кнопка ⚡)
     function checkInteraction() {
       let nearItem = null;
       itemsList.forEach(item => {
@@ -531,11 +556,10 @@
 
       if (nearItem) {
         ui.btnInteract.style.display = 'flex';
-        // При нажатии на кнопку
         ui.btnInteract.onclick = () => {
           if (!nearItem.collected) {
             nearItem.collected = true;
-            currentPlanetGroup.remove(nearItem.mesh);
+            planetGroup.remove(nearItem.mesh);
             questCount++;
             playSound('pickup');
             if (navigator.vibrate) navigator.vibrate(50);
@@ -554,7 +578,7 @@
     }
 
     // ==========================================
-    // ГЛАВНЫЙ ЦИКЛ
+    // ЦИКЛ
     // ==========================================
     camera.position.set(0, 10, 20);
     camera.lookAt(0, 0, -150);
@@ -567,7 +591,6 @@
       if (gameState === 'MENU') {
         camera.position.x = Math.sin(time * 0.2) * 5;
         camera.lookAt(0, 0, -150);
-        earth.rotation.y += dt * 0.05;
       }
 
       if (gameState === 'FLYING') {
@@ -604,7 +627,6 @@
         if (walkAction) walkAction.paused = !isWalking;
         if (mixer) mixer.update(dt);
 
-        // Анимация ядер (парение)
         itemsList.forEach(i => {
           if(!i.collected && (i.type === 'core' || i.type === 'crystal')) {
             i.mesh.rotation.y += dt * 2;
@@ -614,7 +636,6 @@
 
         checkInteraction();
 
-        // Камера
         const targetLookAt = new THREE.Vector3().copy(character.position).add(new THREE.Vector3(0, 1.5, 0));
         if (camMode === 2) {
           const eyePos = new THREE.Vector3(0, 1.6, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), camTheta);
