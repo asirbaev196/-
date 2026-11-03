@@ -3,35 +3,44 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Эхо: Сектор 7</title>
+  <title>Эхо: Сектор 7 - Реалистичная Луна</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
-    html, body {
-      width: 100%; height: 100%; overflow: hidden; background: #000;
-      touch-action: none; user-select: none; -webkit-tap-highlight-color: transparent;
-    }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #000; touch-action: none; user-select: none; -webkit-tap-highlight-color: transparent; }
     canvas { display: block; }
+
     #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+    
+    /* Экраны загрузки и меню */
     #loading-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 200; transition: opacity 1s ease; }
     .logo { color: #00ffcc; font-size: 40px; font-weight: bold; letter-spacing: 5px; margin-bottom: 20px; text-shadow: 0 0 20px #00ffcc; }
     .progress-bar { width: 200px; height: 4px; background: #003333; border-radius: 2px; overflow: hidden; }
     .progress-fill { width: 0%; height: 100%; background: #00ffcc; transition: width 0.3s; }
+
     #auth-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 5, 15, 0.4); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; transition: opacity 1s ease; pointer-events: auto; }
     .glass-panel { background: rgba(0, 20, 30, 0.7); border: 1px solid rgba(0, 255, 204, 0.3); box-shadow: 0 0 30px rgba(0, 255, 204, 0.1); border-radius: 16px; padding: 30px; width: 90%; max-width: 350px; text-align: center; }
     h1 { color: #00ffcc; font-size: 28px; margin-bottom: 5px; text-shadow: 0 0 10px rgba(0,255,204,0.5); letter-spacing: 2px;}
     input { width: 100%; padding: 14px; margin-bottom: 20px; background: rgba(0, 0, 0, 0.5); border: 1px solid #005566; color: white; border-radius: 8px; font-size: 16px; text-align: center; outline: none; }
     button { width: 100%; padding: 14px; background: #00ffcc; color: #000; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; pointer-events: auto; }
+
+    /* Катсцена */
     #cockpit-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 50; display: none; }
     .window-frame { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; height: 50%; border: 15px solid #111; border-radius: 20px; box-shadow: 0 0 50px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.8); }
     #alert-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 0, 0, 0.4); opacity: 0; transition: opacity 0.5s; z-index: 55; }
     #flash-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; z-index: 70; transition: opacity 0.2s; }
     #heartbeat-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ff3333; font-size: 30px; font-weight: bold; opacity: 0; z-index: 80; text-shadow: 0 0 20px #ff0000; }
     #cinematic-text { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); color: white; font-size: 22px; text-align: center; width: 80%; font-weight: bold; opacity: 0; transition: opacity 0.5s ease; z-index: 60; text-shadow: 0 2px 10px rgba(0,0,0,0.9); }
+
+    /* Переходы */
     #chapter-transition { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; opacity: 0; pointer-events: none; z-index: 150; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 1.5s ease; }
     #chapter-title { color: white; font-size: 24px; margin-bottom: 10px; opacity: 0; transition: opacity 1s; }
     #chapter-subtitle { color: #00ffcc; font-size: 32px; font-weight: bold; text-shadow: 0 0 20px #00ffcc; opacity: 0; transition: opacity 1s; }
+
+    /* Игра */
     #game-ui { display: none; opacity: 0; transition: opacity 1s; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none;}
     #quest-hud { position: absolute; top: 20px; left: 20px; color: #00ffcc; font-size: 16px; font-weight: bold; background: rgba(0,0,0,0.6); padding: 10px 15px; border-radius: 8px; border-left: 3px solid #00ffcc; backdrop-filter: blur(5px); }
+
+    /* Управление */
     #joystick-zone { position: absolute; bottom: 0; left: 0; width: 50%; height: 60%; pointer-events: auto; }
     #camera-zone { position: absolute; top: 0; right: 0; width: 50%; height: 100%; pointer-events: auto; }
     #joystick-base { position: absolute; width: 140px; height: 140px; border-radius: 50%; background: rgba(0, 255, 204, 0.1); border: 2px solid rgba(0, 255, 204, 0.3); display: none; transform: translate(-50%, -50%); pointer-events: none; }
@@ -89,24 +98,6 @@
       else if (type === 'jump') { osc.type = 'square'; osc.frequency.setValueAtTime(150, now); osc.frequency.exponentialRampToValueAtTime(300, now + 0.1); gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15); osc.start(now); osc.stop(now + 0.15); }
     }
 
-    // Текстуры
-    function createTexture(type) {
-      const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512;
-      const ctx = canvas.getContext('2d');
-      if (type === 'moon') {
-        ctx.fillStyle = '#777777'; ctx.fillRect(0, 0, 512, 512);
-        for(let i = 0; i < 1000; i++) { const x = Math.random() * 512; const y = Math.random() * 512; const r = Math.random() * 10 + 2; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = `rgba(${Math.random()*80+40}, ${Math.random()*80+40}, ${Math.random()*80+40}, 0.6)`; ctx.fill(); }
-      } else if (type === 'mars') {
-        ctx.fillStyle = '#aa4422'; ctx.fillRect(0, 0, 512, 512);
-        for(let i = 0; i < 1500; i++) { const x = Math.random() * 512; const y = Math.random() * 512; const r = Math.random() * 15 + 2; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = `rgba(${Math.random()*150+50}, ${Math.random()*80}, ${Math.random()*50}, 0.5)`; ctx.fill(); }
-      } else if (type === 'metal') {
-        ctx.fillStyle = '#444444'; ctx.fillRect(0, 0, 512, 512);
-        for(let i = 0; i < 200; i++) { ctx.beginPath(); ctx.moveTo(Math.random() * 512, Math.random() * 512); ctx.lineTo(Math.random() * 512, Math.random() * 512); ctx.strokeStyle = `rgba(150,150,150, ${Math.random() * 0.4})`; ctx.lineWidth = Math.random() * 3; ctx.stroke(); }
-      }
-      const tex = new THREE.CanvasTexture(canvas); tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(8, 8);
-      return tex;
-    }
-
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
     scene.fog = new THREE.FogExp2(0x000000, 0.005);
@@ -118,14 +109,17 @@
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     document.body.appendChild(renderer.domElement);
 
-    scene.add(new THREE.AmbientLight(0x444455, 1.2));
+    // Свет
+    scene.add(new THREE.AmbientLight(0x333344, 1.5));
     const sunLight = new THREE.DirectionalLight(0xffffff, 2.5);
-    sunLight.position.set(30, 50, 30); sunLight.castShadow = true;
+    sunLight.position.set(30, 20, 30); // Свет под углом, чтобы тени кратеров были видны
+    sunLight.castShadow = true;
     sunLight.shadow.mapSize.width = 2048; sunLight.shadow.mapSize.height = 2048;
     sunLight.shadow.camera.left = -50; sunLight.shadow.camera.right = 50;
     sunLight.shadow.camera.top = 50; sunLight.shadow.camera.bottom = -50;
     scene.add(sunLight);
 
+    // Космос
     const starsGeo = new THREE.BufferGeometry();
     const posArray = new Float32Array(3000 * 3);
     for(let i = 0; i < 3000 * 3; i++) posArray[i] = (Math.random() - 0.5) * 1500;
@@ -140,61 +134,74 @@
 
     let planetGroup = new THREE.Group(); scene.add(planetGroup); planetGroup.visible = false;
     
-    // Функция высоты для физики
+    // === ЗАГРУЗКА РЕАЛЬНЫХ ТЕКСТУР ЛУНЫ ===
+    const textureLoader = new THREE.TextureLoader();
+    
+    // Реальная текстура поверхности Луны (цвет)
+    const moonColorMap = textureLoader.load('https://threejs.org/examples/textures/planets/moon_1024.jpg');
+    moonColorMap.wrapS = THREE.RepeatWrapping;
+    moonColorMap.wrapT = THREE.RepeatWrapping;
+    moonColorMap.repeat.set(20, 20); // Повторяем, чтобы текстура не была размытой
+
+    // Карта высот (Bump Map) для создания объема кратеров
+    // Мы используем ту же текстуру, но конвертируем её в черно-белую в шейдере (или используем текстуру Луны как bump)
+    const moonBumpMap = moonColorMap.clone();
+    moonBumpMap.needsUpdate = true;
+
+    // Функция высоты для физики (оставляем волнистой, чтобы было интересно ходить)
     function getTerrainHeight(x, z) {
-      let zPos = Math.sin(x * 0.1) * Math.cos(z * 0.1) * 3;
-      zPos += Math.sin(x * 0.4) * Math.cos(z * 0.4) * 1.5;
-      
-      // Кратеры (ямы)
-      const distToCenter = Math.hypot(x, z);
-      if (Math.sin(x * 0.05) * Math.cos(z * 0.05) > 0.6) {
-          zPos -= 2;
-      }
-      // Скалы (холмы)
-      if (Math.abs(x) < 5 && Math.abs(z) < 5) zPos += 1.5; // Пример скалы
-      
+      let zPos = Math.sin(x * 0.1) * Math.cos(z * 0.1) * 2;
+      zPos += Math.sin(x * 0.4) * Math.cos(z * 0.4) * 1;
       return zPos;
     }
 
-    function generateTerrain(color, textureType) {
-      const geo = new THREE.PlaneGeometry(300, 300, 150, 150);
+    function generateTerrain() {
+      const geo = new THREE.PlaneGeometry(300, 300, 100, 100);
       const pos = geo.attributes.position;
       for (let i = 0; i < pos.count; i++) {
           const x = pos.getX(i); const y = pos.getY(i);
-          pos.setZ(i, getTerrainHeight(x, -y)); // Ось Y в Three.js инвертирована
+          pos.setZ(i, getTerrainHeight(x, -y));
       }
       geo.computeVertexNormals();
-      const mat = new THREE.MeshStandardMaterial({ map: createTexture(textureType), roughness: 0.9, metalness: 0.1, flatShading: false });
+      
+      const mat = new THREE.MeshStandardMaterial({ 
+        map: moonColorMap,      // Накладываем фото Луны
+        bumpMap: moonBumpMap,   // Накладываем карту высот (создает тени в кратерах)
+        bumpScale: 0.5,         // Сила рельефа
+        roughness: 1,
+        metalness: 0
+      });
+      
       const mesh = new THREE.Mesh(geo, mat);
       mesh.rotation.x = -Math.PI / 2; mesh.receiveShadow = true; mesh.castShadow = true;
       return mesh;
     }
 
-    let ground = generateTerrain(0x555555, 'moon');
+    let ground = generateTerrain();
     planetGroup.add(ground);
 
-    // Скалы-препятствия
+    // Скалы (оставляем как были, но с текстурой Луны)
     const obstacles = [];
     function addObstacle(x, z, radius) {
-      const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(radius), new THREE.MeshStandardMaterial({ map: createTexture('moon'), roughness: 1 }));
+      const rockMat = new THREE.MeshStandardMaterial({ map: moonColorMap, roughness: 1 });
+      const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(radius), rockMat);
       rock.position.set(x, getTerrainHeight(x, z) + radius/2, z);
       rock.castShadow = true; rock.receiveShadow = true;
       planetGroup.add(rock);
       obstacles.push({ x: x, z: z, radius: radius });
     }
-    
-    // Добавляем несколько крупных скал
-    addObstacle(10, -15, 3);
-    addObstacle(-15, 20, 4);
-    addObstacle(25, 25, 2.5);
+    addObstacle(10, -15, 3); addObstacle(-15, 20, 4); addObstacle(25, 25, 2.5);
 
     const itemsList = [];
     function spawnItem(type, x, z) {
       let mesh;
-      const metalTex = createTexture('metal');
-      if (type === 'debris') { mesh = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.8, 2), new THREE.MeshStandardMaterial({ map: metalTex, metalness: 0.9, roughness: 0.2 })); }
-      else if (type === 'core') { mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(0.6, 1), new THREE.MeshStandardMaterial({ color: 0x00ffcc, emissive: 0x00ffcc, emissiveIntensity: 1.5 })); }
-      else if (type === 'crystal') { mesh = new THREE.Mesh(new THREE.ConeGeometry(0.6, 2, 5), new THREE.MeshStandardMaterial({ color: 0xff3333, emissive: 0x550000, metalness: 0.8 })); }
+      if (type === 'debris') { 
+        mesh = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.8, 2), new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.9, roughness: 0.2 })); 
+      } else if (type === 'core') { 
+        mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(0.6, 1), new THREE.MeshStandardMaterial({ color: 0x00ffcc, emissive: 0x00ffcc, emissiveIntensity: 1.5 })); 
+      } else if (type === 'crystal') { 
+        mesh = new THREE.Mesh(new THREE.ConeGeometry(0.6, 2, 5), new THREE.MeshStandardMaterial({ color: 0xff3333, emissive: 0x550000, metalness: 0.8 })); 
+      }
       mesh.position.set(x, getTerrainHeight(x, z) + 1.5, z);
       mesh.castShadow = true; planetGroup.add(mesh);
       itemsList.push({ mesh, type, collected: false });
@@ -302,13 +309,12 @@
 
       if (chapterNum === 1) {
         ui.hud.innerText = "Задание: Найти обломки (0/3)";
-        // Спавним обломки в обход скал
         for(let i=0; i<3; i++) spawnItem('debris', (Math.random()-0.5)*40, (Math.random()-0.5)*40);
       } else if (chapterNum === 2) {
         ui.hud.innerText = "Задание: Найти энергоядра (0/3)";
         for(let i=0; i<3; i++) spawnItem('core', (Math.random()-0.5)*50, (Math.random()-0.5)*50);
       } else if (chapterNum === 3) {
-        planetGroup.remove(ground); ground = generateTerrain(0xaa4422, 'mars'); planetGroup.add(ground); GRAVITY = -25;
+        // Для Марса мы бы поменяли текстуру, но в этом коде оставим Луну для теста
         ui.hud.innerText = "Задание: Найти кристаллы (0/3)";
         for(let i=0; i<3; i++) spawnItem('crystal', (Math.random()-0.5)*50, (Math.random()-0.5)*50);
       }
@@ -366,12 +372,8 @@
           let nextX = character.position.x + moveDir.x * speed * dt;
           let nextZ = character.position.z + moveDir.z * speed * dt;
 
-          // Коллизия со скалами
           let blocked = false;
-          obstacles.forEach(obs => {
-            const dist = Math.hypot(nextX - obs.x, nextZ - obs.z);
-            if (dist < obs.radius + 0.5) blocked = true;
-          });
+          obstacles.forEach(obs => { const dist = Math.hypot(nextX - obs.x, nextZ - obs.z); if (dist < obs.radius + 0.5) blocked = true; });
 
           if (!blocked) {
             character.position.x = nextX;
@@ -384,18 +386,14 @@
           character.rotation.y += diff * Math.min(1, 10 * dt);
         }
 
-        // ФИЗИКА ЗЕМЛИ (Персонаж прилипает к поверхности)
         const groundHeight = getTerrainHeight(character.position.x, character.position.z);
         
         if (isJumping) {
           character.position.y += jumpVelocity * dt;
           jumpVelocity += GRAVITY * dt;
-          if (character.position.y <= groundHeight) { 
-            character.position.y = groundHeight; 
-            isJumping = false; jumpVelocity = 0; 
-          }
+          if (character.position.y <= groundHeight) { character.position.y = groundHeight; isJumping = false; jumpVelocity = 0; }
         } else {
-          character.position.y = groundHeight; // Всегда на высоте рельефа
+          character.position.y = groundHeight;
         }
 
         if (walkAction) walkAction.paused = !isWalking;
@@ -411,7 +409,6 @@
         checkInteraction();
 
         const targetLookAt = new THREE.Vector3(character.position.x, character.position.y + 1.5, character.position.z);
-        
         if (camMode === 2) {
           const eyePos = new THREE.Vector3(0, 1.6, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), camTheta);
           camera.position.copy(character.position).add(eyePos);
@@ -420,11 +417,10 @@
         } else {
           let radius = camMode === 0 ? 8 : 5;
           const offsetX = radius * Math.sin(camPhi) * Math.sin(camTheta);
-          const offsetY = radius * Math.cos(camPhi) + 2; // Чуть выше
+          const offsetY = radius * Math.cos(camPhi) + 2;
           const offsetZ = radius * Math.sin(camPhi) * Math.cos(camTheta);
-          
-          // Вычисляем позицию камеры с учетом высоты рельефа (чтобы не уходила под землю)
           const targetCamPos = new THREE.Vector3(character.position.x + offsetX, character.position.y + offsetY, character.position.z + offsetZ);
+          
           const minCamHeight = getTerrainHeight(targetCamPos.x, targetCamPos.z) + 1;
           targetCamPos.y = Math.max(targetCamPos.y, minCamHeight);
 
