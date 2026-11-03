@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Эхо: Сектор 7 - Реалистичная Луна</title>
+  <title>Эхо: Сектор 7 - Глава 1</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
     html, body { width: 100%; height: 100%; overflow: hidden; background: #000; touch-action: none; user-select: none; -webkit-tap-highlight-color: transparent; }
@@ -11,115 +11,152 @@
 
     #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
     
-    /* Экраны загрузки и меню */
+    /* Загрузка и меню */
     #loading-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 200; transition: opacity 1s ease; }
     .logo { color: #00ffcc; font-size: 40px; font-weight: bold; letter-spacing: 5px; margin-bottom: 20px; text-shadow: 0 0 20px #00ffcc; }
     .progress-bar { width: 200px; height: 4px; background: #003333; border-radius: 2px; overflow: hidden; }
     .progress-fill { width: 0%; height: 100%; background: #00ffcc; transition: width 0.3s; }
-
-    #auth-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 5, 15, 0.4); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; transition: opacity 1s ease; pointer-events: auto; }
-    .glass-panel { background: rgba(0, 20, 30, 0.7); border: 1px solid rgba(0, 255, 204, 0.3); box-shadow: 0 0 30px rgba(0, 255, 204, 0.1); border-radius: 16px; padding: 30px; width: 90%; max-width: 350px; text-align: center; }
-    h1 { color: #00ffcc; font-size: 28px; margin-bottom: 5px; text-shadow: 0 0 10px rgba(0,255,204,0.5); letter-spacing: 2px;}
+    #auth-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 5, 15, 0.4); backdrop-filter: blur(10px); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; transition: opacity 1s ease; pointer-events: auto; }
+    .glass-panel { background: rgba(0, 20, 30, 0.7); border: 1px solid rgba(0, 255, 204, 0.3); border-radius: 16px; padding: 30px; width: 90%; max-width: 350px; text-align: center; }
+    h1 { color: #00ffcc; font-size: 28px; margin-bottom: 5px; text-shadow: 0 0 10px rgba(0,255,204,0.5); }
     input { width: 100%; padding: 14px; margin-bottom: 20px; background: rgba(0, 0, 0, 0.5); border: 1px solid #005566; color: white; border-radius: 8px; font-size: 16px; text-align: center; outline: none; }
-    button { width: 100%; padding: 14px; background: #00ffcc; color: #000; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; pointer-events: auto; }
+    button { width: 100%; padding: 14px; background: #00ffcc; color: #000; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; pointer-events: auto; }
 
-    /* Катсцена */
+    /* Катсцена и переходы */
     #cockpit-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 50; display: none; }
     .window-frame { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; height: 50%; border: 15px solid #111; border-radius: 20px; box-shadow: 0 0 50px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.8); }
     #alert-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 0, 0, 0.4); opacity: 0; transition: opacity 0.5s; z-index: 55; }
     #flash-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; z-index: 70; transition: opacity 0.2s; }
-    #heartbeat-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ff3333; font-size: 30px; font-weight: bold; opacity: 0; z-index: 80; text-shadow: 0 0 20px #ff0000; }
-    #cinematic-text { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); color: white; font-size: 22px; text-align: center; width: 80%; font-weight: bold; opacity: 0; transition: opacity 0.5s ease; z-index: 60; text-shadow: 0 2px 10px rgba(0,0,0,0.9); }
-
-    /* Переходы */
+    #heartbeat-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ff3333; font-size: 30px; font-weight: bold; opacity: 0; z-index: 80; }
+    #cinematic-text { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); color: white; font-size: 20px; text-align: center; width: 80%; font-weight: bold; opacity: 0; transition: opacity 0.5s ease; z-index: 60; }
     #chapter-transition { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; opacity: 0; pointer-events: none; z-index: 150; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 1.5s ease; }
     #chapter-title { color: white; font-size: 24px; margin-bottom: 10px; opacity: 0; transition: opacity 1s; }
-    #chapter-subtitle { color: #00ffcc; font-size: 32px; font-weight: bold; text-shadow: 0 0 20px #00ffcc; opacity: 0; transition: opacity 1s; }
+    #chapter-subtitle { color: #00ffcc; font-size: 32px; font-weight: bold; opacity: 0; transition: opacity 1s; }
 
-    /* Игра */
+    /* Игровой интерфейс */
     #game-ui { display: none; opacity: 0; transition: opacity 1s; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none;}
-    #quest-hud { position: absolute; top: 20px; left: 20px; color: #00ffcc; font-size: 16px; font-weight: bold; background: rgba(0,0,0,0.6); padding: 10px 15px; border-radius: 8px; border-left: 3px solid #00ffcc; backdrop-filter: blur(5px); }
+    #quest-hud { position: absolute; top: 20px; left: 20px; color: #00ffcc; font-size: 14px; font-weight: bold; background: rgba(0,0,0,0.7); padding: 10px 15px; border-radius: 8px; border-left: 3px solid #00ffcc; max-width: 70%; }
+    
+    /* Инвентарь и Квесты */
+    #inventory-panel { position: absolute; top: 20px; right: 20px; display: flex; flex-direction: column; gap: 5px; background: rgba(0,0,0,0.6); padding: 8px; border-radius: 8px; border: 1px solid #00ffcc; }
+    .inv-item { color: white; font-size: 11px; display: flex; align-items: center; gap: 5px; }
+    .inv-icon { width: 10px; height: 10px; border-radius: 2px; }
+
+    /* Мини-игры */
+    #minigame-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; flex-direction: column; justify-content: center; align-items: center; pointer-events: auto; z-index: 100; }
+    .mg-panel { background: #112233; border: 2px solid #00ffcc; padding: 20px; border-radius: 12px; width: 80%; max-width: 400px; text-align: center; }
+    .mg-wires { display: flex; justify-content: space-around; margin: 20px 0; }
+    .wire-btn { width: 50px; height: 50px; border-radius: 50%; border: 3px solid #555; background: #222; font-size: 20px; cursor: pointer; }
+    .wire-btn.active { border-color: #00ffcc; box-shadow: 0 0 15px #00ffcc; }
+    .mg-slider { width: 100%; height: 20px; background: #333; position: relative; margin: 20px 0; border-radius: 10px; overflow: hidden; }
+    .mg-target { position: absolute; height: 100%; background: rgba(0,255,0,0.5); width: 20%; left: 40%; }
+    .mg-cursor { position: absolute; width: 4px; height: 100%; background: red; left: 0%; }
 
     /* Управление */
     #joystick-zone { position: absolute; bottom: 0; left: 0; width: 50%; height: 60%; pointer-events: auto; }
     #camera-zone { position: absolute; top: 0; right: 0; width: 50%; height: 100%; pointer-events: auto; }
-    #joystick-base { position: absolute; width: 140px; height: 140px; border-radius: 50%; background: rgba(0, 255, 204, 0.1); border: 2px solid rgba(0, 255, 204, 0.3); display: none; transform: translate(-50%, -50%); pointer-events: none; }
-    #joystick-stick { position: absolute; width: 60px; height: 60px; border-radius: 50%; background: rgba(0, 255, 204, 0.8); box-shadow: 0 0 15px #00ffcc; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; }
-    #top-buttons { position: absolute; top: 20px; right: 20px; pointer-events: auto; }
-    #bottom-buttons { position: absolute; bottom: 30px; right: 20px; display: flex; flex-direction: column; gap: 15px; pointer-events: auto; }
-    .act-btn { width: 60px; height: 60px; border-radius: 50%; border: 2px solid #00ffcc; background: rgba(0, 20, 30, 0.6); color: #00ffcc; font-size: 24px; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 15px rgba(0, 255, 204, 0.2); backdrop-filter: blur(4px); }
+    #joystick-base { position: absolute; width: 120px; height: 120px; border-radius: 50%; background: rgba(0, 255, 204, 0.1); border: 2px solid rgba(0, 255, 204, 0.3); display: none; transform: translate(-50%, -50%); pointer-events: none; }
+    #joystick-stick { position: absolute; width: 50px; height: 50px; border-radius: 50%; background: rgba(0, 255, 204, 0.8); box-shadow: 0 0 15px #00ffcc; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; }
+    
+    #bottom-buttons { position: absolute; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; pointer-events: auto; }
+    #top-buttons { position: absolute; top: 80px; right: 20px; display: flex; flex-direction: column; gap: 10px; pointer-events: auto; }
+    .act-btn { width: 55px; height: 55px; border-radius: 50%; border: 2px solid #00ffcc; background: rgba(0, 20, 30, 0.6); color: #00ffcc; font-size: 22px; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
     .act-btn:active { background: rgba(0, 255, 204, 0.4); transform: scale(0.9); }
-    #btn-jump { width: 80px; height: 80px; font-size: 32px; }
-    #btn-interact { border-color: #ffcc00; color: #ffcc00; box-shadow: 0 0 20px rgba(255, 204, 0, 0.6); display: none; animation: pulse 1s infinite alternate; }
+    #btn-jump { width: 70px; height: 70px; font-size: 28px; }
+    #btn-interact { border-color: #ffcc00; color: #ffcc00; display: none; animation: pulse 1s infinite alternate; }
+    #btn-shoot { border-color: #ff3333; color: #ff3333; display: none; }
     @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.1); } }
   </style>
 </head>
 <body>
   <div id="loading-screen"><div class="logo">ЭХО</div><div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div></div>
   <div id="ui-layer">
-    <div id="auth-screen"><div class="glass-panel"><h1>СЕКТОР 7</h1><input type="text" id="username" placeholder="Позывной" maxlength="12" autocomplete="off"><button id="start-btn">НАЧАТЬ</button></div></div>
+    <div id="auth-screen"><div class="glass-panel"><h1>СЕКТОР 7</h1><input type="text" id="username" placeholder="Позывной" maxlength="12"><button id="start-btn">НАЧАТЬ</button></div></div>
     <div id="cockpit-overlay"><div class="window-frame"></div></div>
-    <div id="alert-overlay"></div><div id="flash-overlay"></div><div id="heartbeat-text">Тук... тук... тук...</div><div id="cinematic-text"></div>
-    <div id="chapter-transition"><div id="chapter-title">Глава 1 Выполнена</div><div id="chapter-subtitle">Глава 2: Энергия</div></div>
+    <div id="alert-overlay"></div><div id="flash-overlay"></div><div id="heartbeat-text">Тук... тук...</div><div id="cinematic-text"></div>
+    <div id="chapter-transition"><div id="chapter-title">Глава 1 Выполнена</div><div id="chapter-subtitle">Конец Демо</div></div>
+    
+    <!-- Мини-игры -->
+    <div id="minigame-overlay">
+      <div class="mg-panel" id="mg-wires-panel" style="display:none;">
+        <h2 id="mg-title">Замкни цепь</h2>
+        <p>Нажимай на провода, чтобы включить все 3 индикатора.</p>
+        <div class="mg-wires">
+          <button class="wire-btn" onclick="toggleWire(this)">1</button>
+          <button class="wire-btn" onclick="toggleWire(this)">2</button>
+          <button class="wire-btn" onclick="toggleWire(this)">3</button>
+        </div>
+      </div>
+      <div class="mg-panel" id="mg-slider-panel" style="display:none;">
+        <h2>Настройка частоты</h2>
+        <p>Нажми кнопку, когда бегунок будет в зеленой зоне.</p>
+        <div class="mg-slider"><div class="mg-target"></div><div class="mg-cursor" id="mg-cursor"></div></div>
+        <button id="mg-slider-btn" style="margin-top: 15px;">ЗАФИКСИРОВАТЬ</button>
+      </div>
+    </div>
+
     <div id="game-ui">
-      <div id="quest-hud">Задание: Найти обломки (0/3)</div>
+      <div id="quest-hud">Инициализация...</div>
+      <div id="inventory-panel">
+        <div class="inv-item"><div class="inv-icon" style="background:#888;"></div><span id="inv-metal">0</span></div>
+        <div class="inv-item"><div class="inv-icon" style="background:#f0f;"></div><span id="inv-wire">0</span></div>
+        <div class="inv-item"><div class="inv-icon" style="background:#0f0;"></div><span id="inv-plastic">0</span></div>
+      </div>
+
       <div id="joystick-zone"><div id="joystick-base"><div id="joystick-stick"></div></div></div>
       <div id="camera-zone"></div>
-      <div id="top-buttons"><button class="act-btn" id="btn-camera">📷</button></div>
-      <div id="bottom-buttons"><button class="act-btn" id="btn-interact">⚡</button><button class="act-btn" id="btn-jump">🦘</button></div>
+      
+      <div id="top-buttons">
+        <button class="act-btn" id="btn-camera">📷</button>
+        <button class="act-btn" id="btn-scanner" style="display:none;">👁</button>
+      </div>
+      <div id="bottom-buttons">
+        <button class="act-btn" id="btn-shoot">🔫</button>
+        <button class="act-btn" id="btn-interact">⚡</button>
+        <button class="act-btn" id="btn-jump">🦘</button>
+      </div>
     </div>
   </div>
 
   <script type="importmap">
-  {
-    "imports": {
-      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-    }
-  }
+  { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
   </script>
 
   <script type="module">
     import * as THREE from 'three';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-    // Звуки
+    // --- Звуки ---
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx;
     function initAudio() { if (!audioCtx) audioCtx = new AudioContext(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
     function playSound(type) {
       if (!audioCtx) return;
-      const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-      osc.connect(gain); gain.connect(audioCtx.destination);
+      const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination);
       const now = audioCtx.currentTime;
       if (type === 'ui') { osc.type = 'sine'; osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1); gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1); osc.start(now); osc.stop(now + 0.1); }
       else if (type === 'pickup') { osc.type = 'triangle'; osc.frequency.setValueAtTime(400, now); osc.frequency.exponentialRampToValueAtTime(800, now + 0.2); gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3); osc.start(now); osc.stop(now + 0.3); }
       else if (type === 'explosion') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, now); osc.frequency.exponentialRampToValueAtTime(10, now + 1); gain.gain.setValueAtTime(0.5, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 1); osc.start(now); osc.stop(now + 1); if (navigator.vibrate) navigator.vibrate([200, 100, 300]); }
       else if (type === 'jump') { osc.type = 'square'; osc.frequency.setValueAtTime(150, now); osc.frequency.exponentialRampToValueAtTime(300, now + 0.1); gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15); osc.start(now); osc.stop(now + 0.15); }
+      else if (type === 'hit') { osc.type = 'square'; osc.frequency.setValueAtTime(100, now); gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1); osc.start(now); osc.stop(now + 0.1); if (navigator.vibrate) navigator.vibrate(100); }
     }
 
+    // --- Сцена ---
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
     scene.fog = new THREE.FogExp2(0x000000, 0.005);
     const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 2000);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(innerWidth, innerHeight);
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.setSize(innerWidth, innerHeight); renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     document.body.appendChild(renderer.domElement);
 
-    // Свет
-    scene.add(new THREE.AmbientLight(0x333344, 1.5));
+    scene.add(new THREE.AmbientLight(0x444455, 1.5));
     const sunLight = new THREE.DirectionalLight(0xffffff, 2.5);
-    sunLight.position.set(30, 20, 30); // Свет под углом, чтобы тени кратеров были видны
-    sunLight.castShadow = true;
-    sunLight.shadow.mapSize.width = 2048; sunLight.shadow.mapSize.height = 2048;
-    sunLight.shadow.camera.left = -50; sunLight.shadow.camera.right = 50;
-    sunLight.shadow.camera.top = 50; sunLight.shadow.camera.bottom = -50;
+    sunLight.position.set(30, 20, 30); sunLight.castShadow = true;
+    sunLight.shadow.mapSize.width = 1024; sunLight.shadow.mapSize.height = 1024;
     scene.add(sunLight);
 
-    // Космос
     const starsGeo = new THREE.BufferGeometry();
     const posArray = new Float32Array(3000 * 3);
     for(let i = 0; i < 3000 * 3; i++) posArray[i] = (Math.random() - 0.5) * 1500;
@@ -134,79 +171,52 @@
 
     let planetGroup = new THREE.Group(); scene.add(planetGroup); planetGroup.visible = false;
     
-    // === ЗАГРУЗКА РЕАЛЬНЫХ ТЕКСТУР ЛУНЫ ===
     const textureLoader = new THREE.TextureLoader();
-    
-    // Реальная текстура поверхности Луны (цвет)
     const moonColorMap = textureLoader.load('https://threejs.org/examples/textures/planets/moon_1024.jpg');
-    moonColorMap.wrapS = THREE.RepeatWrapping;
-    moonColorMap.wrapT = THREE.RepeatWrapping;
-    moonColorMap.repeat.set(20, 20); // Повторяем, чтобы текстура не была размытой
+    moonColorMap.wrapS = THREE.RepeatWrapping; moonColorMap.wrapT = THREE.RepeatWrapping; moonColorMap.repeat.set(20, 20);
+    const moonBumpMap = moonColorMap.clone(); moonBumpMap.needsUpdate = true;
 
-    // Карта высот (Bump Map) для создания объема кратеров
-    // Мы используем ту же текстуру, но конвертируем её в черно-белую в шейдере (или используем текстуру Луны как bump)
-    const moonBumpMap = moonColorMap.clone();
-    moonBumpMap.needsUpdate = true;
-
-    // Функция высоты для физики (оставляем волнистой, чтобы было интересно ходить)
     function getTerrainHeight(x, z) {
-      let zPos = Math.sin(x * 0.1) * Math.cos(z * 0.1) * 2;
-      zPos += Math.sin(x * 0.4) * Math.cos(z * 0.4) * 1;
-      return zPos;
+      return Math.sin(x * 0.1) * Math.cos(z * 0.1) * 2 + Math.sin(x * 0.4) * Math.cos(z * 0.4) * 1;
     }
 
-    function generateTerrain() {
-      const geo = new THREE.PlaneGeometry(300, 300, 100, 100);
-      const pos = geo.attributes.position;
-      for (let i = 0; i < pos.count; i++) {
-          const x = pos.getX(i); const y = pos.getY(i);
-          pos.setZ(i, getTerrainHeight(x, -y));
-      }
-      geo.computeVertexNormals();
-      
-      const mat = new THREE.MeshStandardMaterial({ 
-        map: moonColorMap,      // Накладываем фото Луны
-        bumpMap: moonBumpMap,   // Накладываем карту высот (создает тени в кратерах)
-        bumpScale: 0.5,         // Сила рельефа
-        roughness: 1,
-        metalness: 0
-      });
-      
-      const mesh = new THREE.Mesh(geo, mat);
-      mesh.rotation.x = -Math.PI / 2; mesh.receiveShadow = true; mesh.castShadow = true;
-      return mesh;
-    }
-
-    let ground = generateTerrain();
+    const groundGeo = new THREE.PlaneGeometry(300, 300, 100, 100);
+    const pos = groundGeo.attributes.position;
+    for (let i = 0; i < pos.count; i++) { pos.setZ(i, getTerrainHeight(pos.getX(i), -pos.getY(i))); }
+    groundGeo.computeVertexNormals();
+    const groundMat = new THREE.MeshStandardMaterial({ map: moonColorMap, bumpMap: moonBumpMap, bumpScale: 0.5, roughness: 1 });
+    const ground = new THREE.Mesh(groundGeo, groundMat);
+    ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; ground.castShadow = true;
     planetGroup.add(ground);
 
-    // Скалы (оставляем как были, но с текстурой Луны)
-    const obstacles = [];
-    function addObstacle(x, z, radius) {
-      const rockMat = new THREE.MeshStandardMaterial({ map: moonColorMap, roughness: 1 });
-      const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(radius), rockMat);
-      rock.position.set(x, getTerrainHeight(x, z) + radius/2, z);
-      rock.castShadow = true; rock.receiveShadow = true;
-      planetGroup.add(rock);
-      obstacles.push({ x: x, z: z, radius: radius });
-    }
-    addObstacle(10, -15, 3); addObstacle(-15, 20, 4); addObstacle(25, 25, 2.5);
-
+    // --- Игровые переменные ---
     const itemsList = [];
-    function spawnItem(type, x, z) {
-      let mesh;
-      if (type === 'debris') { 
-        mesh = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.8, 2), new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.9, roughness: 0.2 })); 
-      } else if (type === 'core') { 
-        mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(0.6, 1), new THREE.MeshStandardMaterial({ color: 0x00ffcc, emissive: 0x00ffcc, emissiveIntensity: 1.5 })); 
-      } else if (type === 'crystal') { 
-        mesh = new THREE.Mesh(new THREE.ConeGeometry(0.6, 2, 5), new THREE.MeshStandardMaterial({ color: 0xff3333, emissive: 0x550000, metalness: 0.8 })); 
-      }
-      mesh.position.set(x, getTerrainHeight(x, z) + 1.5, z);
-      mesh.castShadow = true; planetGroup.add(mesh);
-      itemsList.push({ mesh, type, collected: false });
-    }
+    let inventory = { metal: 0, wire: 0, plastic: 0 };
+    let storyObjects = []; // Обломки, щитки, генераторы
+    let enemies = [];
+    let lasers = [];
+    let currentMission = 0;
+    let missionState = {};
 
+    // --- UI ---
+    const ui = {
+      loading: document.getElementById('loading-screen'), progress: document.getElementById('progress-fill'),
+      auth: document.getElementById('auth-screen'), startBtn: document.getElementById('start-btn'),
+      cockpit: document.getElementById('cockpit-overlay'), alert: document.getElementById('alert-overlay'),
+      flash: document.getElementById('flash-overlay'), heartbeat: document.getElementById('heartbeat-text'),
+      text: document.getElementById('cinematic-text'), gameUI: document.getElementById('game-ui'),
+      hud: document.getElementById('quest-hud'), trans: document.getElementById('chapter-transition'),
+      title: document.getElementById('chapter-title'), subtitle: document.getElementById('chapter-subtitle'),
+      btnInteract: document.getElementById('btn-interact'), btnScanner: document.getElementById('btn-scanner'), btnShoot: document.getElementById('btn-shoot'),
+      invMetal: document.getElementById('inv-metal'), invWire: document.getElementById('inv-wire'), invPlastic: document.getElementById('inv-plastic'),
+      mgOverlay: document.getElementById('minigame-overlay'), mgWires: document.getElementById('mg-wires-panel'), mgSlider: document.getElementById('mg-slider-panel'),
+      mgCursor: document.getElementById('mg-cursor')
+    };
+
+    function showText(text, dur) { ui.text.innerText = text; ui.text.style.opacity = 1; if(dur) setTimeout(() => ui.text.style.opacity = 0, dur); }
+    function updateInvUI() { ui.invMetal.innerText = inventory.metal; ui.invWire.innerText = inventory.wire; ui.invPlastic.innerText = inventory.plastic; }
+
+    // --- Персонаж ---
     const character = new THREE.Group(); planetGroup.add(character);
     let mixer, walkAction, isModelLoaded = false;
     const loader = new GLTFLoader();
@@ -222,7 +232,7 @@
       isModelLoaded = true;
     });
 
-    // Управление
+    // --- Управление ---
     let camTheta = 0, camPhi = Math.PI / 3.5, camMode = 0;
     const camZone = document.getElementById('camera-zone');
     let isDraggingCam = false, prevX = 0, prevY = 0;
@@ -233,9 +243,7 @@
       camPhi = Math.max(0.1, Math.min(Math.PI - 0.1, camPhi)); prevX = e.clientX; prevY = e.clientY;
     });
     camZone.addEventListener('pointerup', () => isDraggingCam = false);
-    document.getElementById('btn-camera').addEventListener('click', () => {
-      playSound('ui'); camMode = (camMode + 1) % 3; if(isModelLoaded) character.children[0].visible = (camMode !== 2);
-    });
+    document.getElementById('btn-camera').addEventListener('click', () => { playSound('ui'); camMode = (camMode + 1) % 3; if(isModelLoaded) character.children[0].visible = (camMode !== 2); });
 
     let moveVector = new THREE.Vector2(0, 0);
     let isJumping = false, jumpVelocity = 0, GRAVITY = -15;
@@ -245,8 +253,7 @@
     let touchId = null, centerX = 0, centerY = 0;
     jZone.addEventListener('pointerdown', (e) => {
       if (touchId !== null) return; touchId = e.pointerId; centerX = e.clientX; centerY = e.clientY;
-      jBase.style.display = 'block'; jBase.style.left = centerX + 'px'; jBase.style.top = centerY + 'px';
-      jStick.style.transform = `translate(-50%, -50%)`;
+      jBase.style.display = 'block'; jBase.style.left = centerX + 'px'; jBase.style.top = centerY + 'px'; jStick.style.transform = `translate(-50%, -50%)`;
     });
     jZone.addEventListener('pointermove', (e) => {
       if (e.pointerId !== touchId) return;
@@ -259,21 +266,9 @@
     jZone.addEventListener('pointerup', endTouch); jZone.addEventListener('pointercancel', endTouch);
     document.getElementById('btn-jump').addEventListener('pointerdown', (e) => { e.preventDefault(); if (!isJumping) { isJumping = true; jumpVelocity = 10; playSound('jump'); } });
 
-    let gameState = 'LOADING'; let currentChapter = 1; let questCount = 0;
+    // --- Запуск ---
+    let gameState = 'LOADING';
     const clock = new THREE.Clock();
-    const ui = {
-      loading: document.getElementById('loading-screen'), progress: document.getElementById('progress-fill'),
-      auth: document.getElementById('auth-screen'), startBtn: document.getElementById('start-btn'),
-      cockpit: document.getElementById('cockpit-overlay'), alert: document.getElementById('alert-overlay'),
-      flash: document.getElementById('flash-overlay'), heartbeat: document.getElementById('heartbeat-text'),
-      text: document.getElementById('cinematic-text'), gameUI: document.getElementById('game-ui'),
-      hud: document.getElementById('quest-hud'), trans: document.getElementById('chapter-transition'),
-      title: document.getElementById('chapter-title'), subtitle: document.getElementById('chapter-subtitle'),
-      btnInteract: document.getElementById('btn-interact')
-    };
-
-    function showText(text, dur) { ui.text.innerText = text; ui.text.style.opacity = 1; if(dur) setTimeout(() => ui.text.style.opacity = 0, dur); }
-
     let prog = 0;
     const loadInt = setInterval(() => {
       prog += Math.random() * 20;
@@ -296,60 +291,174 @@
               ui.heartbeat.style.opacity = 0; gameState = 'GAME';
               moonSpace.visible = false; planetGroup.visible = true; stars.visible = false;
               ui.gameUI.style.display = 'block'; setTimeout(() => ui.gameUI.style.opacity = '1', 100);
-              startChapter(1);
+              startMission(1);
             }, 3000);
           }, 500);
         }, 3500);
       }, 3000);
     });
 
-    function startChapter(chapterNum) {
-      currentChapter = chapterNum; questCount = 0;
+    // --- СИСТЕМА МИССИЙ (10 ШТУК) ---
+    function clearScene() {
       itemsList.forEach(i => planetGroup.remove(i.mesh)); itemsList.length = 0;
+      storyObjects.forEach(o => planetGroup.remove(o)); storyObjects.length = 0;
+      enemies.forEach(e => planetGroup.remove(e)); enemies.length = 0;
+      lasers.forEach(l => planetGroup.remove(l)); lasers.length = 0;
+      ui.btnInteract.style.display = 'none'; ui.btnScanner.style.display = 'none'; ui.btnShoot.style.display = 'none';
+    }
 
-      if (chapterNum === 1) {
-        ui.hud.innerText = "Задание: Найти обломки (0/3)";
-        for(let i=0; i<3; i++) spawnItem('debris', (Math.random()-0.5)*40, (Math.random()-0.5)*40);
-      } else if (chapterNum === 2) {
-        ui.hud.innerText = "Задание: Найти энергоядра (0/3)";
-        for(let i=0; i<3; i++) spawnItem('core', (Math.random()-0.5)*50, (Math.random()-0.5)*50);
-      } else if (chapterNum === 3) {
-        // Для Марса мы бы поменяли текстуру, но в этом коде оставим Луну для теста
-        ui.hud.innerText = "Задание: Найти кристаллы (0/3)";
-        for(let i=0; i<3; i++) spawnItem('crystal', (Math.random()-0.5)*50, (Math.random()-0.5)*50);
+    function startMission(num) {
+      currentMission = num; clearScene(); updateInvUI();
+      ui.hud.innerText = `Миссия ${num}: ...`;
+
+      if (num === 1) {
+        ui.hud.innerText = "Миссия 1: Подойди к обломкам корабля";
+        const debris = new THREE.Mesh(new THREE.BoxGeometry(6, 3, 8), new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.9 }));
+        debris.position.set(0, getTerrainHeight(0, -10) + 1.5, -10); debris.castShadow = true;
+        planetGroup.add(debris); storyObjects.push(debris);
+      } 
+      else if (num === 2) {
+        ui.hud.innerText = "Миссия 2: Включи сканер (👁) и найди 3 детали";
+        ui.btnScanner.style.display = 'flex';
+        for(let i=0; i<3; i++) {
+          const m = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.2, 8), new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.9, transparent: true, opacity: 0 }));
+          m.position.set((Math.random()-0.5)*30, getTerrainHeight(0,0) + 0.5, (Math.random()-0.5)*30);
+          planetGroup.add(m); itemsList.push({ mesh: m, type: 'metal', collected: false });
+        }
+      }
+      else if (num === 3) {
+        ui.hud.innerText = "Миссия 3: Почини щиток (Головоломка)";
+        const box = new THREE.Mesh(new THREE.BoxGeometry(1, 1.5, 0.5), new THREE.MeshStandardMaterial({ color: 0x00ffcc }));
+        box.position.set(5, getTerrainHeight(5, 5) + 0.75, 5); planetGroup.add(box); storyObjects.push(box);
+      }
+      else if (num === 4) {
+        ui.hud.innerText = "Миссия 4: Достань аптечку со скалы (Прыгай!)";
+        const med = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), new THREE.MeshStandardMaterial({ color: 0xff3333 }));
+        med.position.set(-10, getTerrainHeight(-10, -10) + 6, -10); planetGroup.add(med); storyObjects.push(med);
+      }
+      else if (num === 5) {
+        ui.hud.innerText = "Миссия 5: Толкай аккумулятор к генератору";
+        const gen = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 3, 8), new THREE.MeshStandardMaterial({ color: 0xaaaaaa }));
+        gen.position.set(0, getTerrainHeight(0, 15) + 1.5, 15); planetGroup.add(gen); storyObjects.push(gen);
+        const bat = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.5, 1.5), new THREE.MeshStandardMaterial({ color: 0x22cc22 }));
+        bat.position.set(0, getTerrainHeight(0, 0) + 0.75, 0); planetGroup.add(bat); storyObjects.push(bat);
+      }
+      else if (num === 6) {
+        ui.hud.innerText = "Миссия 6: Защити генератор от дронов!";
+        ui.btnShoot.style.display = 'flex';
+        const gen = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 3, 8), new THREE.MeshStandardMaterial({ color: 0xaaaaaa, emissive: 0x00ffcc }));
+        gen.position.set(0, getTerrainHeight(0, 0) + 1.5, 0); planetGroup.add(gen); storyObjects.push(gen);
+        missionState.timer = 15; // 15 секунд на защиту
+        missionState.spawnRate = 0;
+      }
+      else if (num === 7) {
+        ui.hud.innerText = "Миссия 7: Пройди через лазеры к серверу";
+        for(let i=0; i<3; i++) {
+          const laser = new THREE.Mesh(new THREE.BoxGeometry(10, 0.2, 0.2), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
+          laser.position.set(0, getTerrainHeight(0, i * 5) + 1.5, i * 5); planetGroup.add(laser); lasers.push(laser);
+        }
+      }
+      else if (num === 8) {
+        ui.hud.innerText = "Миссия 8: Собери передатчик (Крафт)";
+        // В этой миссии мы просто проверяем, что ресурсы есть. 
+        // Для упрощения - если ресурсы есть, миссия завершится по кнопке.
+      }
+      else if (num === 9) {
+        ui.hud.innerText = "Миссия 9: Настрой передатчик (Мини-игра)";
+        const term = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0x00ffcc }));
+        term.position.set(0, getTerrainHeight(0, 0) + 0.5, 0); planetGroup.add(term); storyObjects.push(term);
+      }
+      else if (num === 10) {
+        ui.hud.innerText = "Миссия 10: Беги к кораблю!";
+        const ship = new THREE.Mesh(new THREE.ConeGeometry(3, 6, 4), new THREE.MeshStandardMaterial({ color: 0xaaaaaa }));
+        ship.position.set(0, getTerrainHeight(0, 30) + 3, 30); planetGroup.add(ship); storyObjects.push(ship);
+        missionState.meteorTimer = 0;
       }
     }
 
-    function nextChapter() {
-      gameState = 'TRANSITION'; ui.title.innerText = `Глава ${currentChapter} Выполнена`;
-      let nextName = currentChapter === 1 ? "Глава 2: Энергия" : currentChapter === 2 ? "Глава 3: Красный Сигнал" : "Конец Демо";
-      ui.subtitle.innerText = nextName;
-      ui.trans.style.opacity = 1; ui.title.style.opacity = 1; ui.subtitle.style.opacity = 1; playSound('ui');
-      setTimeout(() => {
-        ui.title.style.opacity = 0; ui.subtitle.style.opacity = 0; setTimeout(() => ui.trans.style.opacity = 0, 1000);
-        if (currentChapter < 3) { startChapter(currentChapter + 1); gameState = 'GAME'; } 
-        else { ui.hud.innerText = "Демо завершено. Ждите обновлений!"; gameState = 'END'; }
-      }, 3500);
+    function completeMission() {
+      playSound('ui'); if(navigator.vibrate) navigator.vibrate(50);
+      if (currentMission < 10) {
+        startMission(currentMission + 1);
+      } else {
+        gameState = 'TRANSITION'; ui.title.innerText = "Глава 1 Выполнена"; ui.subtitle.innerText = "Конец Демо";
+        ui.trans.style.opacity = 1; ui.title.style.opacity = 1; ui.subtitle.style.opacity = 1;
+        setTimeout(() => { ui.title.style.opacity = 0; ui.subtitle.style.opacity = 0; setTimeout(() => ui.trans.style.opacity = 0, 1000); ui.hud.innerText = "Игра пройдена!"; gameState = 'END'; }, 3500);
+      }
     }
 
+    // --- МЕХАНИКИ ВЗАИМОДЕЙСТВИЯ ---
+    let isScanning = false;
+    ui.btnScanner.addEventListener('click', () => {
+      isScanning = !isScanning;
+      itemsList.forEach(i => { i.mesh.material.opacity = isScanning ? 1 : 0; });
+      ui.btnScanner.style.background = isScanning ? 'rgba(0,255,204,0.5)' : 'rgba(0,20,30,0.6)';
+    });
+
+    // Головоломка с проводами
+    let wireState = [false, false, false];
+    window.toggleWire = (btn) => {
+      const index = Array.from(btn.parentNode.children).indexOf(btn);
+      wireState[index] = !wireState[index];
+      btn.classList.toggle('active');
+      if (wireState.every(v => v)) { ui.mgOverlay.style.display = 'none'; completeMission(); }
+    };
+
+    // Мини-игра со слайдером
+    let sliderPos = 0, sliderDir = 1, sliderActive = false;
+    document.getElementById('mg-slider-btn').addEventListener('click', () => {
+      if (sliderPos > 40 && sliderPos < 60) { ui.mgOverlay.style.display = 'none'; completeMission(); }
+      else { showText("Промах! Попробуй еще.", 1500); }
+    });
+
     function checkInteraction() {
-      let nearItem = null;
-      itemsList.forEach(item => { if (!item.collected) { const dist = character.position.distanceTo(item.mesh.position); if (dist < 3) nearItem = item; } });
-      if (nearItem) {
+      let nearObj = null;
+      let action = "";
+      
+      // Обломки (Миссия 1)
+      if (currentMission === 1 && storyObjects[0]) {
+        if (character.position.distanceTo(storyObjects[0].position) < 5) { nearObj = storyObjects[0]; action = "inspect"; }
+      }
+      // Щиток (Миссия 3)
+      if (currentMission === 3 && storyObjects[0]) {
+        if (character.position.distanceTo(storyObjects[0].position) < 3) { nearObj = storyObjects[0]; action = "hack"; }
+      }
+      // Аптечка (Миссия 4)
+      if (currentMission === 4 && storyObjects[0]) {
+        if (character.position.distanceTo(storyObjects[0].position) < 2) { nearObj = storyObjects[0]; action = "pickup_med"; }
+      }
+      // Аккумулятор (Миссия 5)
+      if (currentMission === 5 && storyObjects[1]) {
+        if (character.position.distanceTo(storyObjects[1].position) < 2) { nearObj = storyObjects[1]; action = "push"; }
+      }
+      // Передатчик (Миссия 9)
+      if (currentMission === 9 && storyObjects[0]) {
+        if (character.position.distanceTo(storyObjects[0].position) < 3) { nearObj = storyObjects[0]; action = "use_term"; }
+      }
+      // Ресурсы
+      itemsList.forEach(item => {
+        if (!item.collected && character.position.distanceTo(item.mesh.position) < 2) { nearObj = item; action = "pickup"; }
+      });
+
+      if (nearObj) {
         ui.btnInteract.style.display = 'flex';
         ui.btnInteract.onclick = () => {
-          if (!nearItem.collected) {
-            nearItem.collected = true; planetGroup.remove(nearItem.mesh); questCount++; playSound('pickup'); if (navigator.vibrate) navigator.vibrate(50);
-            if (currentChapter === 1) ui.hud.innerText = `Задание: Найти обломки (${questCount}/3)`;
-            if (currentChapter === 2) ui.hud.innerText = `Задание: Найти энергоядра (${questCount}/3)`;
-            if (currentChapter === 3) ui.hud.innerText = `Задание: Найти кристаллы (${questCount}/3)`;
-            if (questCount >= 3) nextChapter();
-            ui.btnInteract.style.display = 'none';
+          if (action === "inspect") { completeMission(); }
+          if (action === "pickup") { nearObj.collected = true; planetGroup.remove(nearObj.mesh); inventory[nearObj.type]++; updateInvUI(); playSound('pickup'); if(inventory.metal>=3) completeMission(); }
+          if (action === "hack") { ui.mgOverlay.style.display = 'flex'; ui.mgWires.style.display = 'block'; ui.mgSlider.style.display = 'none'; wireState = [false,false,false]; document.querySelectorAll('.wire-btn').forEach(b=>b.classList.remove('active')); }
+          if (action === "pickup_med") { playSound('pickup'); completeMission(); }
+          if (action === "push") { 
+            // Толкаем аккумулятор
+            const dir = new THREE.Vector3().subVectors(storyObjects[1].position, character.position).setY(0).normalize();
+            storyObjects[1].position.addScaledVector(dir, 2);
+            if (storyObjects[1].position.distanceTo(storyObjects[0].position) < 3) completeMission();
           }
+          if (action === "use_term") { ui.mgOverlay.style.display = 'flex'; ui.mgWires.style.display = 'none'; ui.mgSlider.style.display = 'block'; sliderPos = 0; sliderActive = true; }
         };
       } else { ui.btnInteract.style.display = 'none'; }
     }
 
+    // --- ЦИКЛ ---
     camera.position.set(0, 10, 20); camera.lookAt(0, 0, -150);
 
     function animate() {
@@ -368,17 +477,7 @@
           const right = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), camTheta);
           const moveDir = forward.multiplyScalar(-moveVector.y).add(right.multiplyScalar(moveVector.x));
           moveDir.normalize();
-
-          let nextX = character.position.x + moveDir.x * speed * dt;
-          let nextZ = character.position.z + moveDir.z * speed * dt;
-
-          let blocked = false;
-          obstacles.forEach(obs => { const dist = Math.hypot(nextX - obs.x, nextZ - obs.z); if (dist < obs.radius + 0.5) blocked = true; });
-
-          if (!blocked) {
-            character.position.x = nextX;
-            character.position.z = nextZ;
-          }
+          character.position.x += moveDir.x * speed * dt; character.position.z += moveDir.z * speed * dt;
           
           const targetRot = Math.atan2(moveDir.x, moveDir.z) + Math.PI;
           let diff = targetRot - character.rotation.y;
@@ -387,27 +486,84 @@
         }
 
         const groundHeight = getTerrainHeight(character.position.x, character.position.z);
-        
         if (isJumping) {
-          character.position.y += jumpVelocity * dt;
-          jumpVelocity += GRAVITY * dt;
+          character.position.y += jumpVelocity * dt; jumpVelocity += GRAVITY * dt;
           if (character.position.y <= groundHeight) { character.position.y = groundHeight; isJumping = false; jumpVelocity = 0; }
-        } else {
-          character.position.y = groundHeight;
-        }
+        } else { character.position.y = groundHeight; }
 
         if (walkAction) walkAction.paused = !isWalking;
         if (mixer) mixer.update(dt);
 
-        itemsList.forEach(i => {
-          if(!i.collected && (i.type === 'core' || i.type === 'crystal')) {
-            i.mesh.rotation.y += dt * 2;
-            i.mesh.position.y = getTerrainHeight(i.mesh.position.x, i.mesh.position.z) + 1.5 + Math.sin(time * 3) * 0.3;
+        // --- СКРИПТЫ МИССИЙ ---
+        if (currentMission === 6) { // Защита
+          missionState.timer -= dt;
+          missionState.spawnRate -= dt;
+          if (missionState.timer > 0 && missionState.spawnRate <= 0) {
+            const drone = new THREE.Mesh(new THREE.SphereGeometry(0.5, 8, 8), new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0x550000 }));
+            drone.position.set((Math.random()-0.5)*30, 10, (Math.random()-0.5)*30);
+            planetGroup.add(drone); enemies.push(drone); missionState.spawnRate = 1.5;
           }
-        });
+          ui.hud.innerText = `Миссия 6: Защита! Осталось: ${Math.max(0, Math.ceil(missionState.timer))} сек.`;
+          if (missionState.timer <= 0) completeMission();
+
+          enemies.forEach((e, idx) => {
+            e.position.y -= 3 * dt;
+            if (e.position.y <= getTerrainHeight(e.position.x, e.position.z)) { planetGroup.remove(e); enemies.splice(idx, 1); }
+          });
+          
+          if (ui.btnShoot) {
+            ui.btnShoot.onclick = () => {
+              playSound('hit');
+              if (enemies.length > 0) { planetGroup.remove(enemies[0]); enemies.shift(); }
+            };
+          }
+        }
+
+        if (currentMission === 7) { // Стелс
+          lasers.forEach((l, idx) => {
+             l.position.y = getTerrainHeight(0, idx*5) + 1.5 + Math.sin(time * 2) * 1.5;
+             const dx = Math.abs(character.position.x - l.position.x);
+             const dy = Math.abs(character.position.y + 1 - l.position.y);
+             const dz = Math.abs(character.position.z - l.position.z);
+             if (dx < 5 && dy < 1 && dz < 0.5) {
+               playSound('hit'); character.position.z -= 5; // Откидываем назад
+             }
+          });
+          if (character.position.z > 12) completeMission();
+        }
+
+        if (currentMission === 10) { // Побег
+          missionState.meteorTimer -= dt;
+          if (missionState.meteorTimer <= 0) {
+            const meteor = new THREE.Mesh(new THREE.DodecahedronGeometry(1), new THREE.MeshStandardMaterial({ color: 0xff5500 }));
+            meteor.position.set(character.position.x + (Math.random()-0.5)*20, 20, character.position.z - 10);
+            planetGroup.add(meteor); enemies.push(meteor); missionState.meteorTimer = 0.5;
+          }
+          enemies.forEach((e, idx) => {
+            e.position.y -= 20 * dt; // Падают
+            if (e.position.y <= getTerrainHeight(e.position.x, e.position.z)) { playSound('hit'); planetGroup.remove(e); enemies.splice(idx, 1); }
+          });
+          if (storyObjects[0] && character.position.distanceTo(storyObjects[0].position) < 5) completeMission();
+        }
+
+        if (currentMission === 8) {
+           if (inventory.metal >= 2 && inventory.wire >= 1 && inventory.plastic >= 1) {
+              ui.btnInteract.style.display = 'flex';
+              ui.btnInteract.onclick = () => { inventory.metal-=2; inventory.wire-=1; inventory.plastic-=1; updateInvUI(); completeMission(); };
+           }
+        }
+
+        // Мини-игра Слайдер
+        if (sliderActive) {
+          sliderPos += sliderDir * 50 * dt;
+          if (sliderPos > 100) { sliderPos = 100; sliderDir = -1; }
+          if (sliderPos < 0) { sliderPos = 0; sliderDir = 1; }
+          ui.mgCursor.style.left = sliderPos + '%';
+        }
 
         checkInteraction();
 
+        // Камера
         const targetLookAt = new THREE.Vector3(character.position.x, character.position.y + 1.5, character.position.z);
         if (camMode === 2) {
           const eyePos = new THREE.Vector3(0, 1.6, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), camTheta);
@@ -420,10 +576,7 @@
           const offsetY = radius * Math.cos(camPhi) + 2;
           const offsetZ = radius * Math.sin(camPhi) * Math.cos(camTheta);
           const targetCamPos = new THREE.Vector3(character.position.x + offsetX, character.position.y + offsetY, character.position.z + offsetZ);
-          
-          const minCamHeight = getTerrainHeight(targetCamPos.x, targetCamPos.z) + 1;
-          targetCamPos.y = Math.max(targetCamPos.y, minCamHeight);
-
+          targetCamPos.y = Math.max(targetCamPos.y, getTerrainHeight(targetCamPos.x, targetCamPos.z) + 1);
           camera.position.lerp(targetCamPos, 8 * dt);
           camera.lookAt(targetLookAt);
         }
@@ -432,9 +585,7 @@
     }
     animate();
 
-    addEventListener('resize', () => {
-      camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight);
-    });
+    addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
   </script>
 </body>
 </html>
