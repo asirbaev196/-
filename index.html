@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Эхо: Сектор 7</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+    html, body {
+      width: 100%; height: 100%; overflow: hidden; background: #000;
+      touch-action: none; user-select: none; -webkit-tap-highlight-color: transparent;
+    }
+    canvas { display: block; }
+
+    #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+
+    /* ЗАГРУЗКА */
+    #loading-screen {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center;
+      z-index: 200; transition: opacity 1s ease;
+    }
+    .logo { color: #00ffcc; font-size: 40px; font-weight: bold; letter-spacing: 5px; margin-bottom: 20px; text-shadow: 0 0 20px #00ffcc; }
+    .progress-bar { width: 200px; height: 4px; background: #003333; border-radius: 2px; overflow: hidden; }
+    .progress-fill { width: 0%; height: 100%; background: #00ffcc; transition: width 0.3s; }
+
+    /* РЕГИСТРАЦИЯ */
+    #auth-screen {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 5, 15, 0.4); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      z-index: 100; transition: opacity 1s ease; pointer-events: auto;
+    }
+    .glass-panel {
+      background: rgba(0, 20, 30, 0.7); border: 1px solid rgba(0, 255, 204, 0.3);
+      box-shadow: 0 0 30px rgba(0, 255, 204, 0.1); border-radius: 16px; padding: 30px; 
+      width: 90%; max-width: 350px; text-align: center;
+    }
+    h1 { color: #00ffcc; font-size: 28px; margin-bottom: 5px; text-shadow: 0 0 10px rgba(0,255,204,0.5); letter-spacing: 2px;}
+    input {
+      width: 100%; padding: 14px; margin-bottom: 20px; background: rgba(0, 0, 0, 0.5); 
+      border: 1px solid #005566; color: white; border-radius: 8px; font-size: 16px; text-align: center; outline: none;
+    }
+    button {
+      width: 100%; padding: 14px; background: #00ffcc; color: #000; border: none; border-radius: 8px; 
+      font-size: 16px; font-weight: bold; cursor: pointer; pointer-events: auto;
+    }
+
+    /* КАТСЦЕНА */
+    #cockpit-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 50; display: none; }
+    .window-frame {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 80%; height: 50%; border: 15px solid #111; border-radius: 20px;
+      box-shadow: 0 0 50px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.8);
+    }
+    #alert-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 0, 0, 0.4); opacity: 0; transition: opacity 0.5s; z-index: 55; }
+    #flash-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; z-index: 70; transition: opacity 0.2s; }
+    #heartbeat-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ff3333; font-size: 30px; font-weight: bold; opacity: 0; z-index: 80; text-shadow: 0 0 20px #ff0000; }
+    #cinematic-text {
+      position: absolute; top: 15%; left: 50%; transform: translateX(-50%);
+      color: white; font-size: 22px; text-align: center; width: 80%; font-weight: bold;
+      opacity: 0; transition: opacity 0.5s ease; z-index: 60; text-shadow: 0 2px 10px rgba(0,0,0,0.9);
+    }
+
+    /* ПЕРЕХОД ГЛАВ */
+    #chapter-transition {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: #000; opacity: 0; pointer-events: none; z-index: 150;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      transition: opacity 1.5s ease;
+    }
+    #chapter-title { color: white; font-size: 24px; margin-bottom: 10px; opacity: 0; transition: opacity 1s; }
+    #chapter-subtitle { color: #00ffcc; font-size: 32px; font-weight: bold; text-shadow: 0 0 20px #00ffcc; opacity: 0; transition: opacity 1s; }
+
+    /* ИГРОВОЙ ИНТЕРФЕЙС */
+    #game-ui { display: none; opacity: 0; transition: opacity 1s; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none;}
+    #quest-hud {
+      position: absolute; top: 20px; left: 20px; color: #00ffcc; font-size: 16px; font-weight: bold; 
+      background: rgba(0,0,0,0.6); padding: 10px 15px; border-radius: 8px; border-left: 3px solid #00ffcc; backdrop-filter: blur(5px);
+    }
+
+    /* Управление */
+    #joystick-zone { position: absolute; bottom: 0; left: 0; width: 50%; height: 60%; pointer-events: auto; }
+    #camera-zone { position: absolute; top: 0; right: 0; width: 50%; height: 100%; pointer-events: auto; }
+    #joystick-base {
+      position: absolute; width: 140px; height: 140px; border-radius: 50%;
+      background: rgba(0, 255, 204, 0.1); border: 2px solid rgba(0, 255, 204, 0.3);
+      display: none; transform: translate(-50%, -50%); pointer-events: none;
+    }
+    #joystick-stick {
+      position: absolute; width: 60px; height: 60px; border-radius: 50%;
+      background: rgba(0, 255, 204, 0.8); box-shadow: 0 0 15px #00ffcc;
+      top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none;
+    }
+
+    /* Кнопки */
+    #top-buttons { position: absolute; top: 20px; right: 20px; pointer-events: auto; }
+    #bottom-buttons { position: absolute; bottom: 30px; right: 20px; display: flex; flex-direction: column; gap: 15px; pointer-events: auto; }
+    .act-btn {
+      width: 60px; height: 60px; border-radius: 50%; border: 2px solid #00ffcc;
+      background: rgba(0, 20, 30, 0.6); color: #00ffcc; font-size: 24px;
+      display: flex; justify-content: center; align-items: center; box-shadow: 0 0 15px rgba(0, 255, 204, 0.2);
+      backdrop-filter: blur(4px);
+    }
+    .act-btn:active { background: rgba(0, 255, 204, 0.4); transform: scale(0.9); }
+    #btn-jump { width: 80px; height: 80px; font-size: 32px; }
+    #btn-interact { border-color: #ffcc00; color: #ffcc00; box-shadow: 0 0 20px rgba(255, 204, 0, 0.6); display: none; animation: pulse 1s infinite alternate; }
+    
+    @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.1); } }
+  </style>
+</head>
+<body>
+
+  <div id="loading-screen">
+    <div class="logo">ЭХО</div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  </div>
+
+  <div id="ui-layer">
+    <div id="auth-screen">
+      <div class="glass-panel">
+        <h1>СЕКТОР 7</h1>
+        <input type="text" id="username" placeholder="Позывной" maxlength="12" autocomplete="off">
+        <button id="start-btn">НАЧАТЬ</button>
+      </div>
+    </div>
+
+    <div id="cockpit-overlay"><div class="window-frame"></div></div>
+    <div id="alert-overlay"></div>
+    <div id="flash-overlay"></div>
+    <div id="heartbeat-text">Тук... тук... тук...</div>
+    <div id="cinematic-text"></div>
+
+    <div id="chapter-transition">
+      <div id="chapter-title">Глава 1 Выполнена</div>
+      <div id="chapter-subtitle">Глава 2: Энергия</div>
+    </div>
+
+    <div id="game-ui">
+      <div id="quest-hud">Задание: Найти обломки (0/3)</div>
+      
+      <div id="joystick-zone"><div id="joystick-base"><div id="joystick-stick"></div></div></div>
+      <div id="camera-zone"></div>
+      
+      <div id="top-buttons"><button class="act-btn" id="btn-camera">📷</button></div>
+      <div id="bottom-buttons">
+        <button class="act-btn" id="btn-interact">⚡</button>
+        <button class="act-btn" id="btn-jump">🦘</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+    // ==========================================
+    // СИНТЕЗАТОР ЗВУКОВ (Web Audio API)
+    // ==========================================
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx;
+    function initAudio() {
+      if (!audioCtx) audioCtx = new AudioContext();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+    
+    function playSound(type) {
+      if (!audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      const now = audioCtx.currentTime;
+
+      if (type === 'ui') {
+        osc.type = 'sine'; osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
+        gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        osc.start(now); osc.stop(now + 0.1);
+      } else if (type === 'pickup') {
+        osc.type = 'triangle'; osc.frequency.setValueAtTime(400, now); osc.frequency.exponentialRampToValueAtTime(800, now + 0.2);
+        gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        osc.start(now); osc.stop(now + 0.3);
+      } else if (type === 'explosion') {
+        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, now); osc.frequency.exponentialRampToValueAtTime(10, now + 1);
+        gain.gain.setValueAtTime(0.5, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 1);
+        osc.start(now); osc.stop(now + 1);
+        if (navigator.vibrate) navigator.vibrate([200, 100, 300]);
+      } else if (type === 'jump') {
+        osc.type = 'square'; osc.frequency.setValueAtTime(150, now); osc.frequency.exponentialRampToValueAtTime(300, now + 0.1);
+        gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+        osc.start(now); osc.stop(now + 0.15);
+      }
+    }
+
+    // ==========================================
+    // ТЕКСТУРЫ ПЛАНЕТ
+    // ==========================================
+    function createPlanetTexture(type) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512; canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      if (type === 'moon') {
+        ctx.fillStyle = '#999999'; ctx.fillRect(0, 0, 512, 256);
+        for(let i = 0; i < 150; i++) {
+          const x = Math.random() * 512; const y = Math.random() * 256; const r = Math.random() * 8 + 2;
+          ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(40, 40, 40, ${Math.random() * 0.5 + 0.3})`; ctx.fill();
+        }
+      } else if (type === 'earth') {
+        ctx.fillStyle = '#1133aa'; ctx.fillRect(0, 0, 512, 256);
+        for(let i = 0; i < 30; i++) {
+          ctx.beginPath(); ctx.arc(Math.random() * 512, Math.random() * 256, Math.random() * 40 + 10, 0, Math.PI * 2);
+          ctx.fillStyle = '#22aa44'; ctx.fill();
+        }
+        for(let i = 0; i < 50; i++) {
+          ctx.beginPath(); ctx.arc(Math.random() * 512, Math.random() * 256, Math.random() * 20, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'; ctx.fill();
+        }
+      }
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
+      return tex;
+    }
+
+    // ==========================================
+    // 3D СЦЕНА
+    // ==========================================
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x000000);
+    scene.fog = new THREE.FogExp2(0x000000, 0.005);
+
+    const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 2000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    document.body.appendChild(renderer.domElement);
+
+    scene.add(new THREE.AmbientLight(0x333344, 1.5));
+    const sunLight = new THREE.DirectionalLight(0xffffff, 2);
+    sunLight.position.set(50, 20, 50);
+    scene.add(sunLight);
+
+    // Космос
+    const starsGeo = new THREE.BufferGeometry();
+    const posArray = new Float32Array(3000 * 3);
+    for(let i = 0; i < 3000 * 3; i++) posArray[i] = (Math.random() - 0.5) * 1500;
+    starsGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+    const stars = new THREE.Points(starsGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 1.5 }));
+    scene.add(stars);
+
+    const earth = new THREE.Mesh(new THREE.SphereGeometry(80, 64, 64), new THREE.MeshStandardMaterial({ map: createPlanetTexture('earth'), emissive: 0x001133 }));
+    earth.position.set(-300, -50, -400); scene.add(earth);
+
+    const moonSpace = new THREE.Mesh(new THREE.SphereGeometry(40, 64, 64), new THREE.MeshStandardMaterial({ map: createPlanetTexture('moon') }));
+    moonSpace.position.set(0, 0, -150); scene.add(moonSpace);
+
+    // ==========================================
+    // ЛАНДШАФТ (ЛУНА/МАРС)
+    // ==========================================
+    let currentPlanetGroup = new THREE.Group();
+    scene.add(currentPlanetGroup);
+    currentPlanetGroup.visible = false;
+
+    function generateTerrain(color) {
+      const geo = new THREE.PlaneGeometry(300, 300, 100, 100);
+      const pos = geo.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+          const x = pos.getX(i); const y = pos.getY(i);
+          const z = Math.sin(x * 0.1) * Math.cos(y * 0.1) * 3 + Math.sin(x * 0.5) * Math.cos(y * 0.5) * 1.5;
+          pos.setZ(i, z);
+      }
+      geo.computeVertexNormals();
+      const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: color, roughness: 1, flatShading: true }));
+      mesh.rotation.x = -Math.PI / 2;
+      mesh.receiveShadow = true;
+      return mesh;
+    }
+
+    let ground = generateTerrain(0x555555); // Луна
+    currentPlanetGroup.add(ground);
+
+    // ==========================================
+    // ИГРОВЫЕ ОБЪЕКТЫ
+    // ==========================================
+    const itemsList = []; // Обломки, Ядра, Кристаллы
+
+    function spawnItem(type, x, z) {
+      let mesh;
+      if (type === 'debris') {
+        mesh = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.8, 2), new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.9 }));
+        mesh.position.set(x, 1.5, z);
+      } else if (type === 'core') {
+        mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(0.6, 1), new THREE.MeshStandardMaterial({ color: 0x00ffcc, emissive: 0x00ffcc }));
+        mesh.position.set(x, 2, z);
+      } else if (type === 'crystal') {
+        mesh = new THREE.Mesh(new THREE.ConeGeometry(0.6, 2, 5), new THREE.MeshStandardMaterial({ color: 0xff3333, emissive: 0x550000 }));
+        mesh.position.set(x, 1, z);
+      }
+      mesh.castShadow = true;
+      currentPlanetGroup.add(mesh);
+      itemsList.push({ mesh, type, collected: false });
+    }
+
+    // ==========================================
+    // ПЕРСОНАЖ И УПРАВЛЕНИЕ
+    // ==========================================
+    const character = new THREE.Group();
+    currentPlanetGroup.add(character);
+    let mixer, walkAction, isModelLoaded = false;
+
+    const loader = new GLTFLoader();
+    loader.load('https://threejs.org/examples/models/gltf/Soldier.glb', (gltf) => {
+      const model = gltf.scene;
+      model.scale.set(0.8, 0.8, 0.8);
+      model.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.material = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3, metalness: 0.7, skinning: true });
+          if (child.name.includes('Head')) child.material.color.setHex(0x111111);
+        }
+      });
+      character.add(model);
+      mixer = new THREE.AnimationMixer(model);
+      const walkClip = gltf.animations.find(clip => clip.name.toLowerCase() === 'walk');
+      if (walkClip) { walkAction = mixer.clipAction(walkClip); walkAction.play(); walkAction.paused = true; }
+      isModelLoaded = true;
+    });
+
+    // Камера
+    let camTheta = 0, camPhi = Math.PI / 3.5, camMode = 0;
+    const camZone = document.getElementById('camera-zone');
+    let isDraggingCam = false, prevX = 0, prevY = 0;
+
+    camZone.addEventListener('pointerdown', (e) => { isDraggingCam = true; prevX = e.clientX; prevY = e.clientY; });
+    camZone.addEventListener('pointermove', (e) => {
+      if (!isDraggingCam) return;
+      camTheta -= (e.clientX - prevX) * 0.005;
+      camPhi -= (e.clientY - prevY) * 0.005;
+      camPhi = Math.max(0.1, Math.min(Math.PI - 0.1, camPhi));
+      prevX = e.clientX; prevY = e.clientY;
+    });
+    camZone.addEventListener('pointerup', () => isDraggingCam = false);
+
+    document.getElementById('btn-camera').addEventListener('click', () => {
+      playSound('ui');
+      camMode = (camMode + 1) % 3;
+      if(isModelLoaded) character.children[0].visible = (camMode !== 2);
+    });
+
+    // Джойстик
+    let moveVector = new THREE.Vector2(0, 0);
+    let isJumping = false, jumpVelocity = 0;
+    let GRAVITY = -8; // Лунная гравитация
+
+    const jZone = document.getElementById('joystick-zone');
+    const jBase = document.getElementById('joystick-base');
+    const jStick = document.getElementById('joystick-stick');
+    let touchId = null, centerX = 0, centerY = 0;
+
+    jZone.addEventListener('pointerdown', (e) => {
+      if (touchId !== null) return;
+      touchId = e.pointerId; centerX = e.clientX; centerY = e.clientY;
+      jBase.style.display = 'block'; jBase.style.left = centerX + 'px'; jBase.style.top = centerY + 'px';
+      jStick.style.transform = `translate(-50%, -50%)`;
+    });
+    jZone.addEventListener('pointermove', (e) => {
+      if (e.pointerId !== touchId) return;
+      let dx = e.clientX - centerX, dy = e.clientY - centerY;
+      let dist = Math.hypot(dx, dy);
+      if (dist > 50) { dx = (dx / dist) * 50; dy = (dy / dist) * 50; }
+      jStick.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+      moveVector.x = dx / 50; moveVector.y = dy / 50;
+    });
+    const endTouch = (e) => {
+      if (e.pointerId !== touchId) return;
+      touchId = null; jBase.style.display = 'none'; moveVector.set(0, 0); // Мгновенная остановка
+    };
+    jZone.addEventListener('pointerup', endTouch); jZone.addEventListener('pointercancel', endTouch);
+
+    document.getElementById('btn-jump').addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      if (!isJumping) { isJumping = true; jumpVelocity = 10; playSound('jump'); }
+    });
+
+    // ==========================================
+    // СЦЕНАРИЙ И ГЛАВЫ
+    // ==========================================
+    let gameState = 'LOADING';
+    let currentChapter = 1;
+    let questCount = 0;
+    const clock = new THREE.Clock();
+
+    const ui = {
+      loading: document.getElementById('loading-screen'),
+      progress: document.getElementById('progress-fill'),
+      auth: document.getElementById('auth-screen'),
+      startBtn: document.getElementById('start-btn'),
+      cockpit: document.getElementById('cockpit-overlay'),
+      alert: document.getElementById('alert-overlay'),
+      flash: document.getElementById('flash-overlay'),
+      heartbeat: document.getElementById('heartbeat-text'),
+      text: document.getElementById('cinematic-text'),
+      gameUI: document.getElementById('game-ui'),
+      hud: document.getElementById('quest-hud'),
+      trans: document.getElementById('chapter-transition'),
+      title: document.getElementById('chapter-title'),
+      subtitle: document.getElementById('chapter-subtitle'),
+      btnInteract: document.getElementById('btn-interact')
+    };
+
+    function showText(text, dur) {
+      ui.text.innerText = text; ui.text.style.opacity = 1;
+      if(dur) setTimeout(() => ui.text.style.opacity = 0, dur);
+    }
+
+    // 1. Загрузка
+    let prog = 0;
+    const loadInt = setInterval(() => {
+      prog += Math.random() * 20;
+      if (prog >= 100) {
+        prog = 100; clearInterval(loadInt);
+        setTimeout(() => { ui.loading.style.opacity = '0'; setTimeout(() => ui.loading.style.display = 'none', 1000); gameState = 'MENU'; }, 500);
+      }
+      ui.progress.style.width = prog + '%';
+    }, 200);
+
+    // 2. Старт
+    ui.startBtn.addEventListener('click', () => {
+      initAudio(); playSound('ui');
+      const name = document.getElementById('username').value.trim() || "Пилот";
+      ui.auth.style.opacity = '0'; setTimeout(() => ui.auth.style.display = 'none', 1000);
+      
+      gameState = 'FLYING'; ui.cockpit.style.display = 'block';
+      showText(`Пилот ${name}, курс на Луну.`, 3000);
+      
+      setTimeout(() => {
+        showText("Столкновение!", 3000); ui.alert.style.opacity = 1;
+        setTimeout(() => {
+          ui.flash.style.opacity = 1; playSound('explosion'); gameState = 'DEAD';
+          setTimeout(() => {
+            ui.flash.style.opacity = 0; ui.cockpit.style.display = 'none'; ui.alert.style.opacity = 0;
+            ui.heartbeat.style.opacity = 1;
+            setTimeout(() => {
+              ui.heartbeat.style.opacity = 0; gameState = 'GAME';
+              moonSpace.visible = false; currentPlanetGroup.visible = true; stars.visible = false;
+              ui.gameUI.style.display = 'block'; setTimeout(() => ui.gameUI.style.opacity = '1', 100);
+              startChapter(1);
+            }, 3000);
+          }, 500);
+        }, 3500);
+      }, 3000);
+    });
+
+    // ==========================================
+    // ЛОГИКА ГЛАВ
+    // ==========================================
+    function startChapter(chapterNum) {
+      currentChapter = chapterNum;
+      questCount = 0;
+      
+      // Очищаем старые предметы
+      itemsList.forEach(i => currentPlanetGroup.remove(i.mesh));
+      itemsList.length = 0;
+
+      if (chapterNum === 1) {
+        ui.hud.innerText = "Задание: Найти обломки (0/3)";
+        for(let i=0; i<3; i++) spawnItem('debris', (Math.random()-0.5)*40, (Math.random()-0.5)*40);
+      } 
+      else if (chapterNum === 2) {
+        ui.hud.innerText = "Задание: Найти энергоядра (0/3)";
+        for(let i=0; i<3; i++) spawnItem('core', (Math.random()-0.5)*50, (Math.random()-0.5)*50);
+      }
+      else if (chapterNum === 3) {
+        // Меняем ландшафт на Марс
+        currentPlanetGroup.remove(ground);
+        ground = generateTerrain(0xaa4422); // Красный цвет
+        currentPlanetGroup.add(ground);
+        GRAVITY = -15; // Гравитация Марса выше
+
+        ui.hud.innerText = "Задание: Найти кристаллы (0/3)";
+        for(let i=0; i<3; i++) spawnItem('crystal', (Math.random()-0.5)*50, (Math.random()-0.5)*50);
+      }
+    }
+
+    function nextChapter() {
+      gameState = 'TRANSITION';
+      ui.title.innerText = `Глава ${currentChapter} Выполнена`;
+      
+      let nextName = "";
+      if (currentChapter === 1) nextName = "Глава 2: Энергия";
+      if (currentChapter === 2) nextName = "Глава 3: Красный Сигнал";
+      if (currentChapter === 3) nextName = "Конец Демо";
+      
+      ui.subtitle.innerText = nextName;
+      
+      ui.trans.style.opacity = 1; ui.title.style.opacity = 1; ui.subtitle.style.opacity = 1;
+      playSound('ui');
+
+      setTimeout(() => {
+        ui.title.style.opacity = 0; ui.subtitle.style.opacity = 0;
+        setTimeout(() => ui.trans.style.opacity = 0, 1000);
+
+        if (currentChapter < 3) {
+          startChapter(currentChapter + 1);
+          gameState = 'GAME';
+        } else {
+          ui.hud.innerText = "Демо завершено. Ждите обновлений!";
+          gameState = 'END';
+        }
+      }, 3500);
+    }
+
+    // Проверка взаимодействия (Кнопка ⚡)
+    function checkInteraction() {
+      let nearItem = null;
+      itemsList.forEach(item => {
+        if (!item.collected) {
+          const dist = character.position.distanceTo(item.mesh.position);
+          if (dist < 3) nearItem = item;
+        }
+      });
+
+      if (nearItem) {
+        ui.btnInteract.style.display = 'flex';
+        // При нажатии на кнопку
+        ui.btnInteract.onclick = () => {
+          if (!nearItem.collected) {
+            nearItem.collected = true;
+            currentPlanetGroup.remove(nearItem.mesh);
+            questCount++;
+            playSound('pickup');
+            if (navigator.vibrate) navigator.vibrate(50);
+
+            if (currentChapter === 1) ui.hud.innerText = `Задание: Найти обломки (${questCount}/3)`;
+            if (currentChapter === 2) ui.hud.innerText = `Задание: Найти энергоядра (${questCount}/3)`;
+            if (currentChapter === 3) ui.hud.innerText = `Задание: Найти кристаллы (${questCount}/3)`;
+
+            if (questCount >= 3) nextChapter();
+            ui.btnInteract.style.display = 'none';
+          }
+        };
+      } else {
+        ui.btnInteract.style.display = 'none';
+      }
+    }
+
+    // ==========================================
+    // ГЛАВНЫЙ ЦИКЛ
+    // ==========================================
+    camera.position.set(0, 10, 20);
+    camera.lookAt(0, 0, -150);
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const dt = Math.min(clock.getDelta(), 0.1);
+      const time = clock.getElapsedTime();
+
+      if (gameState === 'MENU') {
+        camera.position.x = Math.sin(time * 0.2) * 5;
+        camera.lookAt(0, 0, -150);
+        earth.rotation.y += dt * 0.05;
+      }
+
+      if (gameState === 'FLYING') {
+        moonSpace.position.z += 20 * dt;
+        camera.position.x = (Math.random() - 0.5) * 0.5;
+        camera.position.y = 10 + (Math.random() - 0.5) * 0.5;
+      }
+
+      if (gameState === 'GAME' && isModelLoaded) {
+        const isWalking = moveVector.lengthSq() > 0.01;
+        
+        if (isWalking) {
+          const speed = 6;
+          const forward = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), camTheta);
+          const right = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), camTheta);
+          const moveDir = forward.multiplyScalar(-moveVector.y).add(right.multiplyScalar(moveVector.x));
+          moveDir.normalize();
+
+          character.position.addScaledVector(moveDir, speed * dt);
+          
+          const targetRot = Math.atan2(moveDir.x, moveDir.z) + Math.PI;
+          let diff = targetRot - character.rotation.y;
+          while (diff > Math.PI) diff -= Math.PI * 2;
+          while (diff < -Math.PI) diff += Math.PI * 2;
+          character.rotation.y += diff * Math.min(1, 10 * dt);
+        }
+
+        if (isJumping) {
+          character.position.y += jumpVelocity * dt;
+          jumpVelocity += GRAVITY * dt;
+          if (character.position.y <= 0) { character.position.y = 0; isJumping = false; jumpVelocity = 0; }
+        }
+
+        if (walkAction) walkAction.paused = !isWalking;
+        if (mixer) mixer.update(dt);
+
+        // Анимация ядер (парение)
+        itemsList.forEach(i => {
+          if(!i.collected && (i.type === 'core' || i.type === 'crystal')) {
+            i.mesh.rotation.y += dt * 2;
+            i.mesh.position.y = 1.5 + Math.sin(time * 3) * 0.3;
+          }
+        });
+
+        checkInteraction();
+
+        // Камера
+        const targetLookAt = new THREE.Vector3().copy(character.position).add(new THREE.Vector3(0, 1.5, 0));
+        if (camMode === 2) {
+          const eyePos = new THREE.Vector3(0, 1.6, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), camTheta);
+          camera.position.copy(character.position).add(eyePos);
+          const dirX = Math.sin(camTheta) * Math.cos(camPhi);
+          const dirY = Math.sin(camPhi);
+          const dirZ = Math.cos(camTheta) * Math.cos(camPhi);
+          camera.lookAt(camera.position.clone().add(new THREE.Vector3(dirX, dirY, dirZ).negate()));
+        } else {
+          let radius = camMode === 0 ? 7 : 4;
+          const offsetX = radius * Math.sin(camPhi) * Math.sin(camTheta);
+          const offsetY = radius * Math.cos(camPhi);
+          const offsetZ = radius * Math.sin(camPhi) * Math.cos(camTheta);
+          const targetCamPos = new THREE.Vector3().copy(character.position).add(new THREE.Vector3(offsetX, offsetY, offsetZ));
+          camera.position.lerp(targetCamPos, 10 * dt);
+          camera.lookAt(targetLookAt);
+        }
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    addEventListener('resize', () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+    });
+  </script>
+</body>
+</html>
